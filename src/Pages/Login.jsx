@@ -14,7 +14,7 @@ function Login() {
   const [showResetForm, setShowResetForm] = useState(false);
 
   const navigate = useNavigate();
-
+  const adminEmail = import.meta.env.VITE_ADMIN_EMAIL; // ✅ Admin email stored securely here
   useEffect(() => {
     if (resetSuccessMessage) {
       const timer = setTimeout(() => {
@@ -27,12 +27,24 @@ function Login() {
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
+
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      navigate("/");
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+      const user = userCredential.user;
+
+      if (user.email === adminEmail) {
+        // Admin login success
+        navigate("/adminpanel");
+      } else {
+        // Normal user
+        navigate("/home");
+      }
     } catch (err) {
       console.error("Login error:", err);
-      // Specific error messages based on Firebase error codes
       if (err.code === "auth/user-not-found") {
         setError("Email not registered. Please check or create an account.");
       } else if (err.code === "auth/wrong-password") {
@@ -68,7 +80,7 @@ function Login() {
 
   return (
     <div>
-      {/* Top Banner */}
+      {/* Banner */}
       <div
         className="bg-cover bg-center h-64 flex flex-col justify-center items-center text-black"
         style={{
@@ -81,7 +93,7 @@ function Login() {
         <p className="text-sm mt-2">Home / Account</p>
       </div>
 
-      {/* Form Container */}
+      {/* Form */}
       <div className="flex justify-center py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full space-y-8 bg-gray-50 p-8 border border-gray-300 rounded-sm shadow-sm">
           {showResetForm ? (
@@ -124,7 +136,6 @@ function Login() {
                 Login
               </h2>
 
-              {/* ✅ Success Message with Icon */}
               {resetSuccessMessage && (
                 <div className="flex items-center gap-2 text-green-600 text-sm bg-green-50 border border-green-300 px-4 py-2 rounded">
                   <svg
