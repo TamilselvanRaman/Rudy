@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import "../index.css"; // Assuming you have a CSS file for styles
+import "../../index.css"; 
 
 const categoryNameOptions = {
   "Fairness Soap": [

@@ -1,20 +1,21 @@
 import React, { useState } from "react";
 import { FaChartBar, FaBoxOpen, FaSignOutAlt, FaBars } from "react-icons/fa";
-import Dashboard from "../Components/SalesChart";
-import ProjectEntry from "../Components/ProductEntry";
-import ProductManagement from "../Components/ProductManagement"; // ← Make sure this file exists
+import SalesChart from "./SalesChart";
+import ProjectEntry from "./ProductEntry";
+import ProductManagement from "./ProductManagement";
+import { useNavigate } from "react-router-dom";
 
 const AdminPanel = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("dashboard"); // default selected
-
+  const navigate = useNavigate();
   // Render content based on active tab
   const renderContent = () => {
     switch (activeTab) {
       case "dashboard":
         return (
           <div className="p-6 max-w-full mx-auto bg-white shadow rounded-xl">
-            <Dashboard />
+            <SalesChart />
           </div>
         );
       case "products":
@@ -84,7 +85,7 @@ const AdminPanel = () => {
             className="flex items-center space-x-2 px-4 py-2 text-gray-700 hover:bg-red-100 rounded-md"
           >
             <FaSignOutAlt />
-            <span>Logout</span>
+            <span onClick={() => navigate("/")}>Logout</span>
           </button>
         </nav>
       </aside>

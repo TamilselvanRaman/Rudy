@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { createUserWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../firebaseConfig";
-import { useNavigate,Link } from "react-router-dom";
+import { createUserWithEmailAndPassword, onAuthStateChanged } from "firebase/auth";
+import { ref, set } from "firebase/database";
+import { auth, database } from "../firebase/firebaseConfig";
+import { useNavigate, Link } from "react-router-dom";
 
 function Register() {
   const [firstName, setFirstName] = useState("");
@@ -18,9 +19,26 @@ function Register() {
     setSuccess("");
 
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
-      setSuccess("Registration successful!");
-      setTimeout(() => navigate("/"), 1500);
+      // 1. Create user in Firebase Auth
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // 2. Wait for auth state confirmation
+      onAuthStateChanged(auth, async (currentUser) => {
+        if (currentUser && currentUser.uid === user.uid) {
+          // 3. Add user data to Realtime Database
+          await set(ref(database, `users/${currentUser.uid}`), {
+            firstName,
+            lastName,
+            email,
+            role: "user", // 👈 default role is "user"
+            createdAt: new Date().toISOString(),
+          });
+
+          setSuccess("Registration successful!");
+          setTimeout(() => navigate("/"), 1500);
+        }
+      });
     } catch (err) {
       setError(err.message);
     }
@@ -47,12 +65,14 @@ function Register() {
           <h2 className="text-center text-2xl font-bold text-gray-900 mb-6">
             Create Account
           </h2>
+
           {error && (
             <p className="text-red-500 text-sm mb-3 text-center">{error}</p>
           )}
           {success && (
             <p className="text-green-500 text-sm mb-3 text-center">{success}</p>
           )}
+
           <form onSubmit={handleRegister} className="space-y-4">
             <input
               type="text"
@@ -93,7 +113,7 @@ function Register() {
               Create
             </button>
           </form>
-          {/* Link to Login */}
+
           <p className="mt-4 text-center text-sm">
             Already have an account?{" "}
             <Link to="/login" className="text-blue-600 hover:underline">

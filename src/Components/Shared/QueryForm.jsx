@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { FaTimes } from "react-icons/fa";
 import { getDatabase, ref, push, set } from "firebase/database"; // Firebase Realtime
-import {app} from "../firebaseConfig"; // Update this path as needed
+import { app } from "../../firebase/firebaseConfig"; // Update this path as needed
 
 const QueryForm = ({ onClose }) => {
   const [formData, setFormData] = useState({

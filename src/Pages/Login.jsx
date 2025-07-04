@@ -3,7 +3,8 @@ import {
   signInWithEmailAndPassword,
   sendPasswordResetEmail,
 } from "firebase/auth";
-import { auth } from "../firebaseConfig";
+import { ref, get } from "firebase/database";
+import { auth, database } from "../firebase/firebaseConfig";
 import { useNavigate, Link } from "react-router-dom";
 
 function Login() {
@@ -14,12 +15,10 @@ function Login() {
   const [showResetForm, setShowResetForm] = useState(false);
 
   const navigate = useNavigate();
-  const adminEmail = import.meta.env.VITE_ADMIN_EMAIL; // ✅ Admin email stored securely here
+
   useEffect(() => {
     if (resetSuccessMessage) {
-      const timer = setTimeout(() => {
-        setResetSuccessMessage("");
-      }, 7000);
+      const timer = setTimeout(() => setResetSuccessMessage(""), 7000);
       return () => clearTimeout(timer);
     }
   }, [resetSuccessMessage]);
@@ -36,11 +35,20 @@ function Login() {
       );
       const user = userCredential.user;
 
-      if (user.email === adminEmail) {
-        // Admin login success
+      const snapshot = await get(ref(database, `users/${user.uid}`));
+      const userData = snapshot.val();
+
+      if (!userData) {
+        setError("User data not found in database.");
+        return;
+      }
+
+      // Optional: Check email against env admin
+      const adminEmail = import.meta.env.VITE_ADMIN_EMAIL;
+
+      if (userData.role === "admin" && user.email === adminEmail) {
         navigate("/adminpanel");
       } else {
-        // Normal user
         navigate("/home");
       }
     } catch (err) {
@@ -60,6 +68,7 @@ function Login() {
   const handleResetPassword = async (e) => {
     e.preventDefault();
     setError("");
+
     try {
       await sendPasswordResetEmail(auth, email);
       setResetSuccessMessage(
@@ -93,7 +102,7 @@ function Login() {
         <p className="text-sm mt-2">Home / Account</p>
       </div>
 
-      {/* Form */}
+      {/* Login or Reset Form */}
       <div className="flex justify-center py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full space-y-8 bg-gray-50 p-8 border border-gray-300 rounded-sm shadow-sm">
           {showResetForm ? (

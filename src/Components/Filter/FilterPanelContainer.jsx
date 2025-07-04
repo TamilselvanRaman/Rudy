@@ -1,13 +1,13 @@
-// ================= FilterPanelContainer.jsx =================
-import React, { useState } from 'react';
-import FilterSidebar from './FilterSidebar';
-import MobileFilterDrawer from './MobileFilterDrawer';
+import React, { useState } from "react";
+import FilterSidebar from "./FilterSidebar";
+import MobileFilterDrawer from "./MobileFilterDrawer";
 
 const FilterPanelContainer = ({ filters, setFilters, applyFilters }) => {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+
   return (
     <>
-      <div className="hidden md:block w-84 p-4 bg-white shadow rounded-xl">
+      <div className="hidden md:block w-80">
         <FilterSidebar filters={filters} setFilters={setFilters} />
         <button
           className="mt-4 w-full px-4 py-2 bg-[#EED7CD] text-[#2C1C14] rounded"
@@ -36,4 +36,5 @@ const FilterPanelContainer = ({ filters, setFilters, applyFilters }) => {
     </>
   );
 };
+
 export default FilterPanelContainer;

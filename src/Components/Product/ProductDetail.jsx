@@ -1,8 +1,7 @@
-import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
-import { ref, get, child } from "firebase/database";
-import { database } from "../firebaseConfig";
-import { Minus, Plus } from "lucide-react";
+import React, { useEffect, useState, useContext } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { ref, get, child, set } from "firebase/database";
+import { database } from "../../firebase/firebaseConfig";
 import {
   FaMinus,
   FaPlus,
@@ -11,20 +10,27 @@ import {
   FaShareAlt,
   FaCommentDots,
 } from "react-icons/fa";
-import QueryForm from "../Components/QueryForm";
-import  ProductTabs  from "../Components/ProductTabs";
+import QueryForm from "../../Components/Shared/QueryForm";
+import ProductTabs from "../../Components/Product/ProductTabs";
+import { CartContext } from "../../context/CartContext";
+import { AuthContext } from "../../context/AuthContext.jsx";
 
 function ProductDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const { currentUser } = useContext(AuthContext);
+  const { addToCart } = useContext(CartContext);
+
   const [product, setProduct] = useState(null);
   const [selectedWeight, setSelectedWeight] = useState("");
   const [selectedFlavour, setSelectedFlavour] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [mainImage, setMainImage] = useState("");
   const [isQueryOpen, setIsQueryOpen] = useState(false);
+  const [addedToCart, setAddedToCart] = useState(false);
 
   const rating = 4; // Static rating for now
-  const reviews = 120; // Static review count for now
+  const reviews = 120; // Static reviews for now
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -33,6 +39,7 @@ function ProductDetail() {
       if (snapshot.exists()) {
         const allCategories = Object.values(snapshot.val());
         const allProducts = allCategories.flatMap((category) => {
+          console.log("click", id);
           const cat = category.id;
           return Object.entries(category)
             .filter(([key]) => key !== "id")
@@ -40,16 +47,32 @@ function ProductDetail() {
         });
 
         const singleProduct = allProducts.find((p) => p.id === id);
-        setProduct(singleProduct);
-        setSelectedWeight(singleProduct?.weight?.[0]);
-        setSelectedFlavour(singleProduct?.flavour?.[0]);
-        setMainImage(singleProduct?.images?.[0]);
+        if (singleProduct) {
+          setProduct(singleProduct);
+          setSelectedWeight(singleProduct.weight?.[0] || "");
+          setSelectedFlavour(singleProduct.flavour?.[0] || "");
+          setMainImage(singleProduct.images?.[0] || "");
+        }
       }
     };
+
     fetchProduct();
   }, [id]);
 
   if (!product) return <div className="p-6">Loading...</div>;
+
+  const handleAddToWishlist = async () => {
+    if (!currentUser) {
+      alert("You must be logged in to add items to your wishlist.");
+      return;
+    }
+    const itemRef = ref(database, `wishlist/${currentUser.uid}/${product.id}`);
+    await set(itemRef, {
+      name: product.name,
+      price: product.price,
+      image: product.images?.[0] || "",
+    });
+  };
 
   return (
     <div>
@@ -62,14 +85,13 @@ function ProductDetail() {
           backgroundBlendMode: "lighten",
         }}
       >
-        <h1 className="text-3xl font-bold uppercase ">Product</h1>
-        <p className="text-[13px] mt-2 ">Home / {product.name}</p>
+        <h1 className="text-3xl font-bold uppercase">Product</h1>
+        <p className="text-[13px] mt-2">Home / {product.name}</p>
       </div>
 
       <div className="max-w-4xl mx-auto p-6 flex flex-col md:flex-row gap-10">
-        {/* Left Side */}
+        {/* Left: Images */}
         <div className="w-full md:w-1/2 space-y-4">
-          {/* Main Image and Thumbnails */}
           <div className="flex flex-col sm:flex-row gap-4">
             {/* Main Image */}
             <div className="w-full sm:w-[350px]">
@@ -97,13 +119,12 @@ function ProductDetail() {
           </div>
         </div>
 
-        {/* Right Side - Product Info */}
+        {/* Right: Details */}
         <div className="w-full md:w-1/2 space-y-4">
           <h1 className="text-3xl font-semibold">{product.name}</h1>
           <p className="text-lg text-gray-600">${product.price}</p>
 
-          {/* Rating and reviews */}
-
+          {/* Rating */}
           <div className="flex items-center text-xs text-gray-500 mt-1">
             <div className="text-pink-400 text-sm flex">
               {Array(5)
@@ -120,17 +141,14 @@ function ProductDetail() {
             <span className="ml-2">{reviews} reviews</span>
           </div>
 
-          {/* Table-like layout */}
+          {/* Attributes */}
           <div className="grid grid-cols-[120px_1fr] gap-y-4 text-sm text-gray-700 mt-6">
-            {/* Type */}
             <div className="font-semibold text-gray-800">Type:</div>
             <div>{product.type || "Alcohol Free"}</div>
 
-            {/* Vendor */}
             <div className="font-semibold text-gray-800">Vendor:</div>
             <div>{product.vendor}</div>
 
-            {/* Weight */}
             <div className="font-semibold text-gray-800">Weight:</div>
             <div className="flex gap-2 flex-wrap">
               {product.weight?.map((w) => (
@@ -148,7 +166,6 @@ function ProductDetail() {
               ))}
             </div>
 
-            {/* Flavour */}
             <div className="font-semibold text-gray-800">Flavour:</div>
             <div className="flex gap-2 flex-wrap items-center">
               {product.flavour?.map((f) => (
@@ -166,7 +183,6 @@ function ProductDetail() {
               ))}
             </div>
 
-            {/* Quantity */}
             <div className="font-semibold text-gray-800">Quantity:</div>
             <div className="flex items-center border rounded-md bg-white shadow-sm overflow-hidden w-max">
               <button
@@ -189,29 +205,55 @@ function ProductDetail() {
 
           {/* Action Buttons */}
           <div className="flex flex-wrap gap-3 mt-6">
-            <button className="bg-[#b0c4d6] hover:bg-[#9ab3c6] text-gray-800 px-6 py-2 rounded-lg shadow text-sm transition font-semibold">
-              Add To Cart
-            </button>
-            <button className="bg-[#dfe5ea] hover:bg-[#ccd4da] text-gray-700 px-6 py-2 rounded-lg shadow text-sm transition font-semibold">
-              View Wishlist
+            {addedToCart ? (
+              <button
+                onClick={() => navigate("/cart")}
+                className="bg-rose-300 hover:bg-rose-400 text-black px-6 py-2 rounded-lg shadow text-sm transition font-semibold"
+              >
+                View Cart
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  addToCart({
+                    id: product.id,
+                    name: product.name,
+                    price: parseFloat(product.price),
+                    quantity,
+                    weight: selectedWeight,
+                    flavour: selectedFlavour,
+                    image: product.images?.[0] || "",
+                  });
+                  setAddedToCart(true);
+                }}
+                className="bg-[#b0c4d6] hover:bg-[#9ab3c6] text-gray-800 px-6 py-2 rounded-lg shadow text-sm transition font-semibold"
+              >
+                Add To Cart
+              </button>
+            )}
+            <button
+              onClick={() => {
+                handleAddToWishlist();
+                navigate("/wishlist");
+              }}
+              className="bg-[#dfe5ea] hover:bg-[#ccd4da] text-gray-700 px-6 py-2 rounded-lg shadow text-sm transition font-semibold"
+            >
+              Add to Wishlist
             </button>
           </div>
 
-          <div className="w-68 mt-4 ">
-            <button className="w-full mt-3 bg-[#c5dde0] hover:bg-[#a9cbd0] text-gray-900 text-sm px-10  py-2 rounded-lg shadow font-semibold transition">
+          <div className="w-68 mt-4">
+            <button className="w-full mt-3 bg-[#c5dde0] hover:bg-[#a9cbd0] text-gray-900 text-sm px-10 py-2 rounded-lg shadow font-semibold transition">
               Buy it now
             </button>
           </div>
 
-          {/* Footer Info */}
-          {/* Footer Info */}
+          {/* Additional Info */}
           <div className="mt-6 text-sm text-gray-600 space-y-2">
             <p className="flex items-center gap-2">
               <FaTruck className="text-blue-500" />
-              <span>
-                Estimated delivery:{" "}
-                <span className="font-medium text-gray-800">5–7 days</span>
-              </span>
+              Estimated delivery:{" "}
+              <span className="font-medium text-gray-800">5–7 days</span>
             </p>
             <p className="flex items-center gap-2">
               <FaEye className="text-pink-400" />
@@ -222,16 +264,13 @@ function ProductDetail() {
             </p>
             <p className="flex items-center gap-2">
               <FaShareAlt className="text-gray-600" />
-              <span>Share</span>
+              Share
             </p>
           </div>
 
-          {/* Query Link + Form */}
+          {/* Query Form */}
           <div className="mt-6">
-            {/* Show Modal if Open */}
             {isQueryOpen && <QueryForm onClose={() => setIsQueryOpen(false)} />}
-
-            {/* Trigger Button */}
             <a
               onClick={() => setIsQueryOpen(true)}
               className="cursor-pointer inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 underline font-semibold text-sm mt-2"
