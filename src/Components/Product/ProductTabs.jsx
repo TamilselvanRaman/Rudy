@@ -8,7 +8,7 @@ const tabs = ["Description", "Shipping & Returns", "Reviews"];
 export default function ProductTabs({ product }) {
   const auth = getAuth();
   const currentUser = auth.currentUser;
-  const isAdmin = currentUser?.email === "admin@example.com"; // Replace with your admin logic
+  const isAdmin = currentUser?.email === import.meta.env.VITE_ADMIN_EMAIL; 
 
   const [activeTab, setActiveTab] = useState("Description");
   const [writingReview, setWritingReview] = useState(false);

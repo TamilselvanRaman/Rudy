@@ -1,20 +1,22 @@
 import React, { useState, useEffect } from "react";
-import {
-  signInWithEmailAndPassword,
-  sendPasswordResetEmail,
-} from "firebase/auth";
+import { sendPasswordResetEmail } from "firebase/auth";
 import { ref, get } from "firebase/database";
 import { auth, database } from "../firebase/firebaseConfig";
 import { useNavigate, Link } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { login } from "../redux/slices/authSlice";
 
 function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [localError, setLocalError] = useState("");
   const [resetSuccessMessage, setResetSuccessMessage] = useState("");
   const [showResetForm, setShowResetForm] = useState(false);
 
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  const { currentUser } = useSelector((state) => state.auth);
 
   useEffect(() => {
     if (resetSuccessMessage) {
@@ -23,51 +25,54 @@ function Login() {
     }
   }, [resetSuccessMessage]);
 
+  useEffect(() => {
+    if (currentUser) {
+      const checkAdminAndNavigate = async () => {
+        const snapshot = await get(ref(database, `users/${currentUser.uid}`));
+        const userData = snapshot.val();
+        const adminEmail = import.meta.env.VITE_ADMIN_EMAIL;
+
+        if (!userData) {
+          setLocalError("User data not found in database.");
+          return;
+        }
+
+        if (userData.role === "admin" && currentUser.email === adminEmail) {
+          navigate("/adminpanel");
+        } else {
+          navigate("/home");
+        }
+      };
+
+      checkAdminAndNavigate();
+    }
+  }, [currentUser, navigate]);
+
   const handleLogin = async (e) => {
     e.preventDefault();
-    setError("");
+    setLocalError("");
 
-    try {
-      const userCredential = await signInWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
-      const user = userCredential.user;
+    const resultAction = await dispatch(login({ email, password }));
 
-      const snapshot = await get(ref(database, `users/${user.uid}`));
-      const userData = snapshot.val();
-
-      if (!userData) {
-        setError("User data not found in database.");
-        return;
-      }
-
-      // Optional: Check email against env admin
-      const adminEmail = import.meta.env.VITE_ADMIN_EMAIL;
-
-      if (userData.role === "admin" && user.email === adminEmail) {
-        navigate("/adminpanel");
+    if (login.rejected.match(resultAction)) {
+      const errorCode = resultAction.payload;
+      if (errorCode === "auth/user-not-found") {
+        setLocalError(
+          "Email not registered. Please check or create an account."
+        );
+      } else if (errorCode === "auth/wrong-password") {
+        setLocalError("Incorrect password. Please try again.");
+      } else if (errorCode === "auth/invalid-email") {
+        setLocalError("Please enter a valid email address.");
       } else {
-        navigate("/home");
-      }
-    } catch (err) {
-      console.error("Login error:", err);
-      if (err.code === "auth/user-not-found") {
-        setError("Email not registered. Please check or create an account.");
-      } else if (err.code === "auth/wrong-password") {
-        setError("Incorrect password. Please try again.");
-      } else if (err.code === "auth/invalid-email") {
-        setError("Please enter a valid email address.");
-      } else {
-        setError("Failed to login. Please check your credentials.");
+        setLocalError("Failed to login. Please check your credentials.");
       }
     }
   };
 
   const handleResetPassword = async (e) => {
     e.preventDefault();
-    setError("");
+    setLocalError("");
 
     try {
       await sendPasswordResetEmail(auth, email);
@@ -76,13 +81,14 @@ function Login() {
       );
       setShowResetForm(false);
     } catch (err) {
-      console.error("Reset error:", err.message);
       if (err.code === "auth/user-not-found") {
-        setError("Invalid email address.");
+        setLocalError("Invalid email address.");
       } else if (err.code === "auth/invalid-email") {
-        setError("Please enter a valid email address.");
+        setLocalError("Please enter a valid email address.");
       } else {
-        setError("Failed to send reset email. Make sure the email is correct.");
+        setLocalError(
+          "Failed to send reset email. Make sure the email is correct."
+        );
       }
     }
   };
@@ -113,8 +119,8 @@ function Login() {
               <p className="text-center text-sm mb-4 text-gray-600">
                 We will send you an email to reset your password
               </p>
-              {error && (
-                <p className="text-red-500 text-sm text-center">{error}</p>
+              {localError && (
+                <p className="text-red-500 text-sm text-center">{localError}</p>
               )}
               <form onSubmit={handleResetPassword} className="space-y-4">
                 <input
@@ -163,8 +169,8 @@ function Login() {
                 </div>
               )}
 
-              {error && (
-                <p className="text-red-500 text-sm text-center">{error}</p>
+              {localError && (
+                <p className="text-red-500 text-sm text-center">{localError}</p>
               )}
 
               <form onSubmit={handleLogin} className="mt-8 space-y-6">
@@ -201,7 +207,7 @@ function Login() {
                 <span
                   onClick={() => {
                     setShowResetForm(true);
-                    setError("");
+                    setLocalError("");
                     setResetSuccessMessage("");
                   }}
                   className="hover:underline cursor-pointer font-semibold"

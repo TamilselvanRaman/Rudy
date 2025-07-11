@@ -8,3 +8,9 @@ input{
     outline: none;
     transition: border-color 0.2s;
 }
+.section-fixed-bg {
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center;
+}

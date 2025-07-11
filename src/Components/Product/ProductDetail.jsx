@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ref, get, child, set } from "firebase/database";
 import { database } from "../../firebase/firebaseConfig";
@@ -12,14 +12,16 @@ import {
 } from "react-icons/fa";
 import QueryForm from "../../Components/Shared/QueryForm";
 import ProductTabs from "../../Components/Product/ProductTabs";
-import { CartContext } from "../../context/CartContext";
-import { AuthContext } from "../../context/AuthContext.jsx";
+import { useSelector, useDispatch } from "react-redux";
+import { addToCart } from "../../redux/slices/cartSlice";
+import { addToWishlist } from "../../redux/slices/wishlistSlice";
 
 function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { currentUser } = useContext(AuthContext);
-  const { addToCart } = useContext(CartContext);
+  const dispatch = useDispatch();
+
+  const currentUser = useSelector((state) => state.auth.currentUser);
 
   const [product, setProduct] = useState(null);
   const [selectedWeight, setSelectedWeight] = useState("");
@@ -29,49 +31,67 @@ function ProductDetail() {
   const [isQueryOpen, setIsQueryOpen] = useState(false);
   const [addedToCart, setAddedToCart] = useState(false);
 
-  const rating = 4; // Static rating for now
-  const reviews = 120; // Static reviews for now
+  const rating = 4; // Placeholder
+  const reviews = 120;
 
   useEffect(() => {
     const fetchProduct = async () => {
-      const dbRef = ref(database);
-      const snapshot = await get(child(dbRef, "products"));
+      const snapshot = await get(child(ref(database), "products"));
       if (snapshot.exists()) {
-        const allCategories = Object.values(snapshot.val());
-        const allProducts = allCategories.flatMap((category) => {
-          console.log("click", id);
-          const cat = category.id;
-          return Object.entries(category)
-            .filter(([key]) => key !== "id")
-            .map(([key, p]) => ({ ...p, id: key, category: cat }));
-        });
-
-        const singleProduct = allProducts.find((p) => p.id === id);
-        if (singleProduct) {
-          setProduct(singleProduct);
-          setSelectedWeight(singleProduct.weight?.[0] || "");
-          setSelectedFlavour(singleProduct.flavour?.[0] || "");
-          setMainImage(singleProduct.images?.[0] || "");
+        const cats = Object.values(snapshot.val());
+        const all = cats.flatMap((c) =>
+          Object.entries(c)
+            .filter(([k]) => k !== "id")
+            .map(([key, p]) => ({ ...p, id: key }))
+        );
+        const single = all.find((p) => p.id === id);
+        if (single) {
+          setProduct(single);
+          setSelectedWeight(single.weight?.[0] || "");
+          setSelectedFlavour(single.flavour?.[0] || "");
+          setMainImage(single.images?.[0] || "");
         }
       }
     };
-
     fetchProduct();
   }, [id]);
 
   if (!product) return <div className="p-6">Loading...</div>;
 
-  const handleAddToWishlist = async () => {
+  const onAddToCart = () => {
+    dispatch(
+      addToCart({
+        uid: currentUser?.uid,
+        newItem: {
+          id: product.id,
+          name: product.name,
+          price: parseFloat(product.price),
+          quantity,
+          weight: selectedWeight,
+          flavour: selectedFlavour,
+          image: product.images?.[0] || "",
+        },
+      })
+    );
+    setAddedToCart(true);
+  };
+
+  const onAddToWishlist = () => {
     if (!currentUser) {
-      alert("You must be logged in to add items to your wishlist.");
+      alert("You must be logged in to add to wishlist.");
       return;
     }
-    const itemRef = ref(database, `wishlist/${currentUser.uid}/${product.id}`);
-    await set(itemRef, {
-      name: product.name,
-      price: product.price,
-      image: product.images?.[0] || "",
-    });
+    dispatch(
+      addToWishlist({
+        uid: currentUser.uid,
+        item: {
+          id: product.id,
+          name: product.name,
+          price: product.price,
+          image: product.images?.[0] || "",
+        },
+      })
+    );
   };
 
   return (
@@ -90,10 +110,9 @@ function ProductDetail() {
       </div>
 
       <div className="max-w-4xl mx-auto p-6 flex flex-col md:flex-row gap-10">
-        {/* Left: Images */}
+        {/* Left column */}
         <div className="w-full md:w-1/2 space-y-4">
           <div className="flex flex-col sm:flex-row gap-4">
-            {/* Main Image */}
             <div className="w-full sm:w-[350px]">
               <img
                 src={mainImage}
@@ -101,8 +120,6 @@ function ProductDetail() {
                 className="w-full h-auto rounded-lg shadow-md object-cover"
               />
             </div>
-
-            {/* Thumbnails */}
             <div className="flex sm:flex-col gap-3 justify-center items-center sm:items-start">
               {product.images?.map((img, i) => (
                 <img
@@ -119,7 +136,7 @@ function ProductDetail() {
           </div>
         </div>
 
-        {/* Right: Details */}
+        {/* Right column */}
         <div className="w-full md:w-1/2 space-y-4">
           <h1 className="text-3xl font-semibold">{product.name}</h1>
           <p className="text-lg text-gray-600">${product.price}</p>
@@ -145,10 +162,8 @@ function ProductDetail() {
           <div className="grid grid-cols-[120px_1fr] gap-y-4 text-sm text-gray-700 mt-6">
             <div className="font-semibold text-gray-800">Type:</div>
             <div>{product.type || "Alcohol Free"}</div>
-
             <div className="font-semibold text-gray-800">Vendor:</div>
             <div>{product.vendor}</div>
-
             <div className="font-semibold text-gray-800">Weight:</div>
             <div className="flex gap-2 flex-wrap">
               {product.weight?.map((w) => (
@@ -203,39 +218,25 @@ function ProductDetail() {
             </div>
           </div>
 
-          {/* Action Buttons */}
+          {/* Action buttons */}
           <div className="flex flex-wrap gap-3 mt-6">
             {addedToCart ? (
               <button
-                onClick={() => navigate("/cart")}
+                onClick={() => navigate("/cartpage")}
                 className="bg-rose-300 hover:bg-rose-400 text-black px-6 py-2 rounded-lg shadow text-sm transition font-semibold"
               >
                 View Cart
               </button>
             ) : (
               <button
-                onClick={() => {
-                  addToCart({
-                    id: product.id,
-                    name: product.name,
-                    price: parseFloat(product.price),
-                    quantity,
-                    weight: selectedWeight,
-                    flavour: selectedFlavour,
-                    image: product.images?.[0] || "",
-                  });
-                  setAddedToCart(true);
-                }}
+                onClick={onAddToCart}
                 className="bg-[#b0c4d6] hover:bg-[#9ab3c6] text-gray-800 px-6 py-2 rounded-lg shadow text-sm transition font-semibold"
               >
                 Add To Cart
               </button>
             )}
             <button
-              onClick={() => {
-                handleAddToWishlist();
-                navigate("/wishlist");
-              }}
+              onClick={onAddToWishlist}
               className="bg-[#dfe5ea] hover:bg-[#ccd4da] text-gray-700 px-6 py-2 rounded-lg shadow text-sm transition font-semibold"
             >
               Add to Wishlist
@@ -248,7 +249,7 @@ function ProductDetail() {
             </button>
           </div>
 
-          {/* Additional Info */}
+          {/* Extra info */}
           <div className="mt-6 text-sm text-gray-600 space-y-2">
             <p className="flex items-center gap-2">
               <FaTruck className="text-blue-500" />
@@ -259,7 +260,7 @@ function ProductDetail() {
               <FaEye className="text-pink-400" />
               <span>
                 <span className="font-medium text-gray-800">181</span> people
-                are viewing this right now
+                viewing now
               </span>
             </p>
             <p className="flex items-center gap-2">
@@ -268,7 +269,7 @@ function ProductDetail() {
             </p>
           </div>
 
-          {/* Query Form */}
+          {/* Query form */}
           <div className="mt-6">
             {isQueryOpen && <QueryForm onClose={() => setIsQueryOpen(false)} />}
             <a
@@ -281,6 +282,7 @@ function ProductDetail() {
           </div>
         </div>
       </div>
+
       <ProductTabs product={product} />
     </div>
   );

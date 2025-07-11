@@ -1,21 +1,27 @@
 import React, { useState, useEffect } from "react";
 import FilterSidebar from "../components/Filter/FilterSidebar";
-import ProductCard from "../components/Product/ProductCard";
-import { getProducts } from "../context/ProductsContext";
+import ProductCard from "../Components/Product/ProductCard";
 import { motion, AnimatePresence } from "framer-motion";
-import { LayoutGrid, List, X, SlidersHorizontal } from "lucide-react";
-import { Dialog } from "@headlessui/react";
+import { LayoutGrid, List } from "lucide-react";
 import { FiFilter } from "react-icons/fi";
 import MobileFilterDrawer from "../Components/Filter/MobileFilterDrawer";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchProducts } from "../redux/slices/productsSlice";
+import {
+  selectAllProducts,
+  selectProductLoading,
+} from "../redux/slices/productsSlice";
 
 const Products = () => {
-  const [allProducts, setAllProducts] = useState([]);
+  const dispatch = useDispatch();
+  const allProducts = useSelector(selectAllProducts);
+  const loading = useSelector(selectProductLoading);
+  const status = loading ? "loading" : "succeeded";
+
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [viewMode, setViewMode] = useState("grid");
   const [sortOption, setSortOption] = useState("featured");
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
-  // const [appliedFilters, setAppliedFilters] = useState({});
-
   const [filters, setFilters] = useState({
     availability: [],
     price: { min: "", max: "" },
@@ -27,13 +33,12 @@ const Products = () => {
   });
 
   useEffect(() => {
-    getProducts().then((data) => {
-      setAllProducts(data);
-      setFilteredProducts(data);
-    });
-  }, []);
+    dispatch(fetchProducts());
+  }, [dispatch]);
 
   useEffect(() => {
+    if (status !== "succeeded") return;
+
     let filtered = [...allProducts];
     const minPrice = parseFloat(filters.price.min) || 0;
     const maxPrice = parseFloat(filters.price.max) || Infinity;
@@ -114,7 +119,7 @@ const Products = () => {
     });
 
     setFilteredProducts(filtered);
-  }, [filters, allProducts, sortOption]);
+  }, [filters, allProducts, sortOption, status]);
 
   const getCounts = () => {
     const counts = {
@@ -172,7 +177,6 @@ const Products = () => {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Banner */}
       <div
         className="bg-cover bg-center h-64 flex flex-col justify-center items-center text-black"
         style={{
@@ -185,7 +189,6 @@ const Products = () => {
         <p className="text-sm mt-2">Home / Products</p>
       </div>
 
-      {/* 🔸 Mobile Filter Button */}
       <div className="flex justify-between items-center px-4 md:hidden mt-4">
         <button
           onClick={() => setMobileFiltersOpen(true)}
@@ -199,7 +202,6 @@ const Products = () => {
         </span>
       </div>
 
-      {/* 🔹 Mobile Filter Drawer */}
       <MobileFilterDrawer
         isOpen={mobileFiltersOpen}
         onClose={() => setMobileFiltersOpen(false)}
@@ -208,9 +210,7 @@ const Products = () => {
         allProducts={allProducts}
       />
 
-      {/* Main Layout */}
       <div className="flex flex-col md:flex-row gap-6 px-4 md:px-10 pb-10 ml-0 md:ml-20 mr-0 md:mr-20 mt-10">
-        {/* Desktop Sidebar */}
         <aside className="hidden md:block w-full md:w-72 md:sticky md:top-28 self-start">
           <FilterSidebar
             filters={filters}
@@ -222,11 +222,8 @@ const Products = () => {
           />
         </aside>
 
-        {/* Products Section */}
         <main className="flex-1 flex flex-col gap-4">
-          {/* Sort and View Mode */}
           <div className="hidden md:flex justify-between items-center px-4 py-3 bg-[#FAEFE4] shadow-sm mb-6">
-            {/* View toggle and sort */}
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setViewMode("grid")}
@@ -278,7 +275,6 @@ const Products = () => {
             </div>
           </div>
 
-          {/* Product Cards */}
           <AnimatePresence mode="wait">
             <motion.div
               key={viewMode}

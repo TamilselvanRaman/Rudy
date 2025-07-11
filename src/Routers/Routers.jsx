@@ -1,10 +1,7 @@
+// src/Routers/Routers.jsx
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
-// Context Providers
-import { CartProvider } from "../context/CartContext";
-import { ProductsProvider } from "../context/ProductsContext";
-
-// Pages
+// Pages & Components
 import Home from "../pages/Home";
 import Login from "../pages/Login";
 import Register from "../pages/Register";
@@ -13,54 +10,53 @@ import ProductDetail from "../components/Product/ProductDetail";
 import CartPage from "../Pages/User/CartPage";
 import Checkout from "../pages/User/checkOut";
 import ContactPage from "../pages/ContactPage";
-import NewsPage from "../pages/NewsPage";
 import AdminPanel from "../pages/Admin/AdminPanel";
 import Wishlist from "../Pages/User/Wishlist";
-
-// Components
-import Cart from "../components/Cart/Cart"; // You may change to index.js if combining CartSummary
-
-// Routes
+import AboutPage from "../Pages/AboutPage";
+import FaqPage from "../Pages/FaqPage";
+import Collections from "../Pages/Collections";
+import Compare from "../Pages/User/Compare";
+import NotFound from "../components/Shared/NotFound";
 import ProtectedAdminRoute from "./ProtectedAdminRoute";
 
-// Shared
-import NotFound from "../components/Shared/NotFound";
+// Layout wrapper
+import Layout from "./Layout";
 
 function Routers() {
   return (
-    <ProductsProvider>
-      <CartProvider>
-        <Router>
-          <Routes>
-            {/* Public Routes */}
-            <Route path="/" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/home" element={<Home />} />
-            <Route path="/products" element={<Products />} />
-            <Route path="/products/:id" element={<ProductDetail />} />
-            <Route path="/cart" element={<Cart />} />
-            <Route path="/cartpage" element={<CartPage />} />
-            <Route path="/checkout" element={<Checkout />} />
-            <Route path="/contact" element={<ContactPage />} />
-            <Route path="/news" element={<NewsPage />} />
-            <Route path="/wishlist" element={<Wishlist />} />
+    <Router>
+      <Routes>
+        {/* Public routes without layout */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
 
-            {/* Protected Admin Route */}
-            <Route
-              path="/adminpanel"
-              element={
-                <ProtectedAdminRoute>
-                  <AdminPanel />
-                </ProtectedAdminRoute>
-              }
-            />
+        {/* Layout route wraps common UI */}
+        <Route element={<Layout />}>
+          <Route path="/" element={<Home />} />
+          <Route path="/products" element={<Products />} />
+          <Route path="/products/:id" element={<ProductDetail />} />
+          <Route path="/cartpage" element={<CartPage />} />
+          <Route path="/checkout" element={<Checkout />} />
+          <Route path="/contact" element={<ContactPage />} />
+          <Route path="/wishlist" element={<Wishlist />} />
+          <Route path="/about" element={<AboutPage />} />
+          <Route path="/faq" element={<FaqPage />} />
+          <Route path="/collections" element={<Collections />} />
+          <Route path="/compare" element={<Compare />} />
+          <Route path="*" element={<NotFound />} />
+        </Route>
 
-            {/* Catch-all 404 Page */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </Router>
-      </CartProvider>
-    </ProductsProvider>
+        {/* Protected admin route */}
+        <Route
+          path="/adminpanel"
+          element={
+            <ProtectedAdminRoute>
+              <AdminPanel />
+            </ProtectedAdminRoute>
+          }
+        />
+      </Routes>
+    </Router>
   );
 }
 

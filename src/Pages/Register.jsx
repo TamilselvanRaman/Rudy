@@ -1,8 +1,8 @@
-import React, { useState } from "react";
-import { createUserWithEmailAndPassword, onAuthStateChanged } from "firebase/auth";
-import { ref, set } from "firebase/database";
-import { auth, database } from "../firebase/firebaseConfig";
+// src/pages/Register.jsx
+import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { signup } from "../redux/slices/authSlice";
 
 function Register() {
   const [firstName, setFirstName] = useState("");
@@ -11,42 +11,40 @@ function Register() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { currentUser } = useSelector((state) => state.auth);
+
+  useEffect(() => {
+    if (currentUser) {
+      setSuccess("Registration successful!");
+      const timeout = setTimeout(() => navigate("/"), 1500);
+      return () => clearTimeout(timeout);
+    }
+  }, [currentUser, navigate]);
 
   const handleRegister = async (e) => {
     e.preventDefault();
     setError("");
     setSuccess("");
+    setLoading(true);
 
-    try {
-      // 1. Create user in Firebase Auth
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
+    const result = await dispatch(
+      signup({ email, password, firstName, lastName })
+    );
 
-      // 2. Wait for auth state confirmation
-      onAuthStateChanged(auth, async (currentUser) => {
-        if (currentUser && currentUser.uid === user.uid) {
-          // 3. Add user data to Realtime Database
-          await set(ref(database, `users/${currentUser.uid}`), {
-            firstName,
-            lastName,
-            email,
-            role: "user", // 👈 default role is "user"
-            createdAt: new Date().toISOString(),
-          });
-
-          setSuccess("Registration successful!");
-          setTimeout(() => navigate("/"), 1500);
-        }
-      });
-    } catch (err) {
-      setError(err.message);
+    if (signup.rejected.match(result)) {
+      setError(result.payload || "Registration failed.");
     }
+
+    setLoading(false);
   };
 
   return (
     <div>
-      {/* Top Banner */}
+      {/* Banner */}
       <div
         className="bg-cover bg-center h-64 flex flex-col justify-center items-center text-black"
         style={{
@@ -59,7 +57,7 @@ function Register() {
         <p className="text-sm mt-2">Home / Create Account</p>
       </div>
 
-      {/* Form Section */}
+      {/* Form */}
       <div className="flex justify-center py-16 px-4 sm:px-6 lg:px-8">
         <div className="w-full max-w-md bg-gray-50 p-8 border border-gray-300 rounded-sm shadow-sm">
           <h2 className="text-center text-2xl font-bold text-gray-900 mb-6">
@@ -108,9 +106,14 @@ function Register() {
             />
             <button
               type="submit"
-              className="w-full bg-blue-200 text-black font-medium py-2 px-4 rounded-sm hover:bg-blue-300"
+              disabled={loading}
+              className={`w-full font-medium py-2 px-4 rounded-sm ${
+                loading
+                  ? "bg-blue-100 text-gray-500 cursor-not-allowed"
+                  : "bg-blue-200 text-black hover:bg-blue-300"
+              }`}
             >
-              Create
+              {loading ? "Creating..." : "Create"}
             </button>
           </form>
 

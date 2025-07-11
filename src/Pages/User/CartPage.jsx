@@ -1,16 +1,21 @@
-import React, { useContext, useState } from "react";
-import { CartContext } from "../../context/CartContext";
+import React, { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import ProductCard from "../../Components/Product/ProductCard";
-import { ProductsContext } from "../../context/ProductsContext";
 import { FiRefreshCw, FiTrash } from "react-icons/fi";
+import {
+  increaseQuantity,
+  decreaseQuantity,
+  removeFromCart,
+} from "../../redux/slices/cartSlice";
 
 const CartPage = () => {
-  const { cartItems, onIncrease, onDecrease, onRemove, onCheckout } =
-    useContext(CartContext);
-  const { products } = useContext(ProductsContext);
-  const [refresh, setRefresh] = useState(0);
+  const dispatch = useDispatch();
   const navigate = useNavigate();
+  const [refresh, setRefresh] = useState(0);
+
+  const cartItems = useSelector((state) => state.cart.cartItems);
+  const products = useSelector((state) => state.products.products);
 
   const subtotal = cartItems
     .reduce((sum, item) => sum + Number(item.price) * item.quantity, 0)
@@ -79,20 +84,20 @@ const CartPage = () => {
 
             <div className="flex justify-center items-center gap-3">
               <button
-                onClick={() => onDecrease(item.id)}
+                onClick={() => dispatch(decreaseQuantity(item.id))}
                 className="px-3 py-1 border rounded hover:bg-[#f5e7db]"
               >
                 –
               </button>
               <span className="font-medium">{item.quantity}</span>
               <button
-                onClick={() => onIncrease(item.id)}
+                onClick={() => dispatch(increaseQuantity(item.id))}
                 className="px-3 py-1 border rounded hover:bg-[#f5e7db]"
               >
                 +
               </button>
               <button
-                onClick={() => onRemove(item.id)}
+                onClick={() => dispatch(removeFromCart(item.id))}
                 className="ml-2 p-2 bg-[#e1b8a1] hover:bg-[#d79c84] text-white rounded"
                 title="Remove"
               >
@@ -128,10 +133,7 @@ const CartPage = () => {
               Taxes and shipping calculated at checkout
             </p>
             <button
-              onClick={() => {
-                onCheckout();
-                navigate("/checkout");
-              }}
+              onClick={() => navigate("/checkout")}
               className="w-full bg-[#e1b8a1] hover:bg-[#d79c84] text-white font-semibold py-3 rounded transition mt-4"
             >
               Check Out

@@ -1,114 +1,170 @@
-import React, { useEffect, useState, useContext } from "react";
-import { ref, get, remove, child } from "firebase/database";
-import { database } from "../../firebase/firebaseConfig";
-import { Trash2 } from "lucide-react";
-import { AuthContext } from "../../context/AuthContext.jsx";
+import React, { useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import { Trash2 } from "lucide-react";
+import {
+  fetchWishlist,
+  removeWishlistItem,
+} from "../../redux/slices/wishlistSlice";
+import { useAuth } from "../../hooks/useAuth"; // Assuming a custom hook to get currentUser
 
 export default function Wishlist() {
-  const { currentUser } = useContext(AuthContext);
-  const [wishlistItems, setWishlistItems] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { currentUser } = useAuth(); // Replace with your AuthContext logic
+  const { items: wishlistItems, loading } = useSelector(
+    (state) => state.wishlist
+  );
 
-  // Fetch wishlist
   useEffect(() => {
-    if (!currentUser) return;
+    if (currentUser) {
+      dispatch(fetchWishlist(currentUser.uid));
+    }
+  }, [currentUser, dispatch]);
 
-    const fetchWishlist = async () => {
-      setLoading(true);
-      const dbRef = ref(database);
-      const snapshot = await get(child(dbRef, `wishlist/${currentUser.uid}`));
-      if (snapshot.exists()) {
-        const items = Object.entries(snapshot.val()).map(([id, data]) => ({
-          id,
-          ...data,
-        }));
-        setWishlistItems(items);
-      }
-      setLoading(false);
-    };
-
-    fetchWishlist();
-  }, [currentUser]);
-
-  // Remove item
-  const handleRemove = async (itemId) => {
-    if (!currentUser) return;
-    await remove(ref(database, `wishlist/${currentUser.uid}/${itemId}`));
-    setWishlistItems((prev) => prev.filter((item) => item.id !== itemId));
+  const handleRemove = (itemId) => {
+    if (currentUser) {
+      dispatch(removeWishlistItem({ uid: currentUser.uid, itemId }));
+    }
   };
-
-  if (loading) return <div className="p-6">Loading...</div>;
 
   return (
     <div className="min-h-screen bg-white flex flex-col items-center">
       {/* Banner */}
-      <div className="w-full bg-[#f4f1ee] py-10 flex flex-col items-center">
-        <h1 className="text-3xl font-semibold tracking-widest">WISHLIST</h1>
-        <p className="text-xs mt-1 text-gray-500">Home / Wishlist</p>
+      <div className="relative w-full h-60 flex flex-col items-center justify-center text-white">
+        <img
+          src="/banner-image.jpg"
+          alt="Wishlist Banner"
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-black/40" />
+        <div className="relative z-10 text-center">
+          <h1 className="text-3xl font-semibold tracking-widest">WISHLIST</h1>
+          <p className="text-sm mt-1 text-gray-300">Home / Wishlist</p>
+        </div>
       </div>
 
-      {wishlistItems.length === 0 ? (
+      {loading ? (
+        <div className="p-6 text-center">Loading...</div>
+      ) : wishlistItems.length === 0 ? (
         <div className="p-6 text-center text-gray-500">
           Your wishlist is empty.
         </div>
       ) : (
-        <div className="w-full max-w-5xl mt-8 border rounded-lg overflow-hidden shadow-sm">
-          {/* Table Header */}
-          <div className="hidden sm:grid grid-cols-5 bg-[#c2d8e0] text-sm uppercase font-medium text-gray-700 text-center">
-            <div className="py-3">Image</div>
-            <div className="py-3">Product</div>
-            <div className="py-3">Price</div>
-            <div className="py-3">Purchase</div>
-            <div className="py-3">Remove</div>
+        <>
+          {/* Desktop Table View */}
+          <div className="hidden md:block w-full max-w-5xl mt-8 border border-gray-300 rounded-sm overflow-x-auto">
+            <table className="w-full table-auto border-collapse">
+              <thead>
+                <tr className="bg-[#c2d8e0] text-sm uppercase font-medium text-gray-700 text-center border-b border-black/40">
+                  <th className="py-3 px-4 border-r border-[#f9f9f9] w-[130px]">
+                    Image
+                  </th>
+                  <th className="py-3 px-4 border-r border-[#f9f9f9]">
+                    Product
+                  </th>
+                  <th className="py-3 px-4 border-r border-[#f9f9f9]">Price</th>
+                  <th className="py-3 px-4 border-r border-[#f9f9f9]">
+                    Purchase
+                  </th>
+                  <th className="py-3 px-4">Remove</th>
+                </tr>
+              </thead>
+              <tbody>
+                {wishlistItems.map((item, index) => (
+                  <tr
+                    key={item.id}
+                    className={`text-center border-b last:border-none border-gray-200 ${
+                      index % 2 === 0 ? "bg-white" : "bg-gray-50/40"
+                    }`}
+                  >
+                    <td className="py-4 px-4">
+                      <div
+                        className="flex justify-center cursor-pointer"
+                        onClick={() => navigate(`/products/${item.id}`)}
+                      >
+                        <img
+                          src={item.image}
+                          alt={item.name}
+                          className="w-24 h-24 object-contain"
+                        />
+                      </div>
+                    </td>
+                    <td
+                      className="font-semibold text-black text-sm px-4 py-4 cursor-pointer"
+                      onClick={() => navigate(`/products/${item.id}`)}
+                    >
+                      {item.name}
+                    </td>
+                    <td className="text-black text-sm px-4 py-4">
+                      ${parseFloat(item.price).toFixed(2)}
+                    </td>
+                    <td className="px-4 py-4">
+                      <button
+                        onClick={() => navigate(`/products/${item.id}`)}
+                        className="bg-[#c2d8e0] hover:bg-[#a4c3d0] text-black text-sm px-4 py-2 rounded-sm transition"
+                      >
+                        SELECT OPTIONS
+                      </button>
+                    </td>
+                    <td className="px-4 py-4">
+                      <button
+                        onClick={() => handleRemove(item.id)}
+                        className="text-gray-600 hover:text-red-500"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
 
-          {/* Items */}
-          {wishlistItems.map((item) => (
-            <div
-              key={item.id}
-              className="grid grid-cols-1 sm:grid-cols-5 items-center text-center border-b last:border-0 p-4 sm:p-0"
-            >
-              {/* Image */}
-              <div className="flex justify-center sm:py-4 mb-4 sm:mb-0">
-                <img
-                  src={item.image}
-                  alt={item.name}
-                  className="w-24 h-24 object-contain"
-                />
-              </div>
-
-              {/* Product */}
-              <div className="text-left pl-4 font-medium">{item.name}</div>
-
-              {/* Price */}
-              <div className="py-2 sm:py-4 text-gray-700">
-                ${parseFloat(item.price).toFixed(2)}
-              </div>
-
-              {/* Purchase */}
-              <div className="py-2 sm:py-4">
-                <button
-                  onClick={() => navigate(`/product/${item.id}`)}
-                  className="bg-[#c2d8e0] hover:bg-[#a4c3d0] text-sm px-4 py-2 rounded transition font-medium"
+          {/* Mobile Card View */}
+          <div className="md:hidden w-full px-4 mt-8 space-y-6">
+            {wishlistItems.map((item) => (
+              <div
+                key={item.id}
+                className="border border-gray-200 rounded-md shadow-sm overflow-hidden bg-white"
+              >
+                <div
+                  className="w-full cursor-pointer bg-gray-50"
+                  onClick={() => navigate(`/products/${item.id}`)}
                 >
-                  SELECT OPTIONS
-                </button>
+                  <img
+                    src={item.image}
+                    alt={item.name}
+                    className="w-full h-60 object-contain p-4"
+                  />
+                </div>
+                <div className="p-4 text-center">
+                  <h2
+                    className="font-medium text-base text-black mb-2 cursor-pointer"
+                    onClick={() => navigate(`/products/${item.id}`)}
+                  >
+                    {item.name}
+                  </h2>
+                  <p className="text-sm text-gray-600 mb-4">
+                    ${parseFloat(item.price).toFixed(2)}
+                  </p>
+                  <button
+                    onClick={() => navigate(`/products/${item.id}`)}
+                    className="block w-full bg-[#c2d8e0] hover:bg-[#a4c3d0] text-black text-sm py-2 rounded-sm font-medium transition"
+                  >
+                    SELECT OPTIONS
+                  </button>
+                  <button
+                    onClick={() => handleRemove(item.id)}
+                    className="mt-4 text-gray-600 hover:text-[#C48D69]"
+                  >
+                    <Trash2 size={20} />
+                  </button>
+                </div>
               </div>
-
-              {/* Remove */}
-              <div className="py-2 sm:py-4">
-                <button
-                  onClick={() => handleRemove(item.id)}
-                  className="text-gray-500 hover:text-red-500"
-                >
-                  <Trash2 size={18} />
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        </>
       )}
     </div>
   );

@@ -1,8 +1,11 @@
-import React, { useEffect, useState, useContext } from "react";
+import React, { useEffect, useState } from "react";
 import { Eye, Heart, ShoppingCart, Layers, Star } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { CartContext } from "../../context/CartContext";
+import { useDispatch, useSelector } from "react-redux";
+import { addToCart } from "../../redux/slices/cartSlice";
+import { ref, set } from "firebase/database";
+import { database } from "../../firebase/firebaseConfig";
 
 const iconContainerVariants = {
   hidden: {},
@@ -38,12 +41,13 @@ const iconItemVariants = {
 
 const ProductCard = ({ product, onAddToCart, viewMode }) => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [isHovered, setIsHovered] = useState(false);
   const [hoveredIconIndex, setHoveredIconIndex] = useState(null);
   const [randomStars, setRandomStars] = useState(0);
   const [reviewCount, setReviewCount] = useState(0);
 
-  const { addToCart, cartItems, currentUserId } = useContext(CartContext);
+  const currentUser = useSelector((state) => state.auth.currentUser);
 
   useEffect(() => {
     setRandomStars(Math.floor(Math.random() * 3) + 3);
@@ -58,7 +62,19 @@ const ProductCard = ({ product, onAddToCart, viewMode }) => {
     {
       label: "Compare",
       icon: <Layers size={16} />,
-      onClick: () => navigate(`/products/${product.id}`),
+      onClick: async () => {
+        try {
+          await set(ref(database, `compare/${product.id}`), {
+            id: product.id,
+            name: product.name,
+            price: product.price,
+            image: product.images?.[0] || "/placeholder.jpg",
+          });
+          navigate("/compare");
+        } catch (error) {
+          console.error("Error adding to compare:", error);
+        }
+      },
     },
     {
       label: "View",
@@ -70,30 +86,48 @@ const ProductCard = ({ product, onAddToCart, viewMode }) => {
       icon: <ShoppingCart size={16} />,
       onClick: (e) => {
         e.stopPropagation();
-        onAddToCart(product);
-
-        addToCart({
-          id: product.id,
-          name: product.name,
-          price: parseFloat(product.price),
-          quantity: 1, // or from props
-          weight: product.defaultWeight || "100g",
-          flavour: product.defaultFlavour || "Original",
-          image: product.images?.[0] || "",
-        });
+        if (onAddToCart) onAddToCart(product);
+        dispatch(
+          addToCart({
+            id: product.id,
+            name: product.name,
+            price: parseFloat(product.price),
+            quantity: 1,
+            weight: product.defaultWeight || "100g",
+            flavour: product.defaultFlavour || "Original",
+            image: product.images?.[0] || "",
+          })
+        );
       },
     },
     {
       label: "Wishlist",
       icon: <Heart size={16} />,
-      onClick: (e) => e.stopPropagation(),
+      onClick: async (e) => {
+        e.stopPropagation();
+        if (!currentUser) {
+          alert("Login required to add to wishlist.");
+          return;
+        }
+
+        try {
+          await set(ref(database, `wishlist/${currentUser.uid}/${product.id}`), {
+            name: product.name,
+            price: product.price,
+            image: product.images?.[0] || "",
+          });
+        } catch (err) {
+          console.error("Error adding to wishlist:", err);
+        }
+      },
     },
   ];
 
+  // ✅ LIST VIEW
   if (viewMode === "list") {
     return (
       <motion.div
-        className="w-full flex gap-6 items-center "
+        className="w-full flex gap-6 items-center"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, ease: "easeOut" }}
@@ -104,7 +138,6 @@ const ProductCard = ({ product, onAddToCart, viewMode }) => {
         }}
         onClick={handleNavigate}
       >
-        {/* Image Section */}
         <div className="relative overflow-hidden rounded-lg w-48 h-48 min-w-[10rem]">
           <motion.img
             src={product.images?.[0]}
@@ -113,8 +146,6 @@ const ProductCard = ({ product, onAddToCart, viewMode }) => {
             animate={{ scale: isHovered ? 1.7 : 1 }}
             transition={{ duration: 0.5, ease: "easeInOut" }}
           />
-
-          {/* Overlay Icons */}
           <AnimatePresence>
             {isHovered && (
               <motion.div
@@ -135,27 +166,17 @@ const ProductCard = ({ product, onAddToCart, viewMode }) => {
                       className="bg-[#FAEFE4] p-1 rounded shadow text-xs w-7 h-7 flex items-center justify-center"
                       variants={iconItemVariants}
                       whileHover={{ scale: 1.1 }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        btn.onClick(e);
-                      }}
+                      onClick={(e) => btn.onClick(e)}
                     >
                       {btn.icon}
                     </motion.button>
-
-                    {/* Tooltip */}
                     <AnimatePresence>
                       {hoveredIconIndex === index && (
                         <motion.div
                           initial={{ opacity: 0, x: 20 }}
                           animate={{ opacity: 1, x: 0 }}
                           exit={{ opacity: 0, x: 20 }}
-                          transition={{
-                            type: "spring",
-                            stiffness: 300,
-                            damping: 25,
-                          }}
-                          className="absolute right-full mr-3  flex items-center"
+                          className="absolute right-full mr-3 flex items-center"
                         >
                           <div className="relative bg-[#FAEFE4] text-xs text-gray-800 px-3 py-1 rounded shadow whitespace-nowrap">
                             {btn.label}
@@ -171,7 +192,6 @@ const ProductCard = ({ product, onAddToCart, viewMode }) => {
           </AnimatePresence>
         </div>
 
-        {/* Info Section */}
         <div className="flex-1">
           <h3 className="text-base font-semibold text-gray-800">
             {product.name}
@@ -182,9 +202,7 @@ const ProductCard = ({ product, onAddToCart, viewMode }) => {
                 key={i}
                 size={18}
                 className={
-                  i < randomStars
-                    ? "text-[#e4d8cf] fill-[#e4d8cf]"
-                    : "text-gray-300"
+                  i < randomStars ? "text-[#e4d8cf] fill-[#e4d8cf]" : "text-gray-300"
                 }
                 strokeWidth={1}
               />
@@ -201,7 +219,7 @@ const ProductCard = ({ product, onAddToCart, viewMode }) => {
     );
   }
 
-  // Default Grid view
+  // ✅ GRID VIEW
   return (
     <motion.div
       className="relative group cursor-pointer"
@@ -224,7 +242,6 @@ const ProductCard = ({ product, onAddToCart, viewMode }) => {
         />
       </div>
 
-      {/* Overlay Icons */}
       <AnimatePresence>
         {isHovered && (
           <motion.div
@@ -245,25 +262,16 @@ const ProductCard = ({ product, onAddToCart, viewMode }) => {
                   className="bg-[#FAEFE4] p-2 rounded shadow flex items-center justify-center"
                   variants={iconItemVariants}
                   whileHover={{ scale: 1.1 }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    btn.onClick(e);
-                  }}
+                  onClick={(e) => btn.onClick(e)}
                 >
                   {btn.icon}
                 </motion.button>
-
                 <AnimatePresence>
                   {hoveredIconIndex === index && (
                     <motion.div
                       initial={{ opacity: 0, x: 20 }}
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: 20 }}
-                      transition={{
-                        type: "spring",
-                        stiffness: 300,
-                        damping: 25,
-                      }}
                       className="absolute right-full mr-3 flex items-center"
                     >
                       <div className="relative bg-[#FAEFE4] text-xs text-gray-800 px-3 py-1 rounded shadow whitespace-nowrap">
@@ -280,18 +288,14 @@ const ProductCard = ({ product, onAddToCart, viewMode }) => {
       </AnimatePresence>
 
       <div className="text-center mt-4 px-2" onClick={handleNavigate}>
-        <h3 className="text-base font-semibold text-gray-800">
-          {product.name}
-        </h3>
+        <h3 className="text-base font-semibold text-gray-800">{product.name}</h3>
         <div className="flex justify-center items-center mt-1 gap-1">
           {Array.from({ length: 5 }).map((_, i) => (
             <Star
               key={i}
               size={18}
               className={
-                i < randomStars
-                  ? "text-[#e4d8cf] fill-[#e4d8cf]"
-                  : "text-gray-300"
+                i < randomStars ? "text-[#e4d8cf] fill-[#e4d8cf]" : "text-gray-300"
               }
               strokeWidth={1}
             />

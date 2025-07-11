@@ -1,8 +1,8 @@
-import React, { useContext, useState } from "react";
-import { CartContext } from "../../context/CartContext";
+import React, { useState } from "react";
+import { useSelector } from "react-redux";
 
 const Checkout = () => {
-  const { cartItems } = useContext(CartContext);
+  const cartItems = useSelector((state) => state.cart.items);
 
   const [form, setForm] = useState({
     email: "",
@@ -184,7 +184,6 @@ const Checkout = () => {
             </div>
           </div>
 
-          {/* Shipping method */}
           <div className="bg-gray-100 text-gray-500 p-4 rounded text-sm">
             Enter your shipping address to view available shipping methods.
           </div>

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, Plus, Minus, X } from "lucide-react";
 import BestSellerCarousel from "./BestSellerCarousel";
-import FilterSection from './FilterSection'
+import FilterSection from "./FilterSection";
 import { BiFilterAlt } from "react-icons/bi";
 import { Dialog } from "@headlessui/react";
 
@@ -50,7 +50,6 @@ const FilterSidebar = ({
     bathSoap: false,
     collections: false,
   });
-
 
   const toggleCustomMenu = (key) => {
     setCustomMenuExpanded((prev) => ({
@@ -112,8 +111,6 @@ const FilterSidebar = ({
     return [...map.values()];
   };
 
-  // Dynamically generated option lists
-
   const PRODUCT_TYPE_OPTIONS = [
     ...new Set([
       ...DEFAULT_PRODUCT_TYPES,
@@ -135,22 +132,22 @@ const FilterSidebar = ({
 
   const maxPrice = counts?.maxPrice ?? 100;
 
+  // ✅ Fixed bestSellers - avoid mutating state
   const bestSellers = (() => {
     const bestSellerProducts = products.filter((p) =>
       p.moreFilters?.includes("best-seller")
     );
-    return (bestSellerProducts.length >= 3 ? bestSellerProducts : products)
-      .sort(() => 0.5 - Math.random())
-      .slice(0, 3);
+    const list = bestSellerProducts.length >= 3 ? bestSellerProducts : products;
+    return [...list].sort(() => 0.5 - Math.random()).slice(0, 3);
   })();
 
+  
   const herbalSoaps = (() => {
     const herbalProducts = products.filter((p) =>
       p.moreFilters?.includes("herbal-soap")
     );
-    return (herbalProducts.length >= 3 ? herbalProducts : products)
-      .sort(() => 0.5 - Math.random())
-      .slice(0, 3);
+    const list = herbalProducts.length >= 3 ? herbalProducts : products;
+    return [...list].sort(() => 0.5 - Math.random()).slice(0, 3);
   })();
 
   const [randomStars, setRandomStars] = useState(0);
@@ -160,10 +157,10 @@ const FilterSidebar = ({
     setRandomStars(Math.floor(Math.random() * 3) + 3);
     setReviewCount(Math.floor(Math.random() * 5) + 1);
   }, []);
-
   return (
     <aside className="top-6 h-max w-full space-y-6 font-sans">
       {/* Applied Filters */}
+      
       {Object.keys(filters).some(
         (key) =>
           filters[key]?.length > 0 ||
