@@ -5,6 +5,8 @@ import { FaCheckCircle, FaPaperPlane } from "react-icons/fa";
 import ProductCard from "../Components/Product/ProductCard";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchProducts } from "../redux/slices/productsSlice";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 
 const features = [
   {
@@ -171,6 +173,30 @@ const cardVariants = {
   visible: { opacity: 1, y: 0 },
 };
 
+const slides = [
+  {
+    id: 1,
+    img: "/Home/slider1.webp",
+    heading: ["Protects Sensitive Skin", "From Dryness"],
+    sublinks: ["SHOP ALL", "VIEW MORE"],
+    position: "center",
+  },
+  {
+    id: 2,
+    img: "/Home/slider2.webp",
+    heading: ["Be clean. Be aromatic.", "Be desirable."],
+    sublinks: ["SHOP ALL", "VIEW MORE"],
+    position: "left",
+  },
+  {
+    id: 3,
+    img: "/Home/slider3.webp",
+    heading: ["Natural Antioxidant", "Enriched Soap"],
+    sublinks: ["SHOP ALL", "VIEW MORE"],
+    position: "right",
+  },
+];
+
 const Home = () => {
   const dispatch = useDispatch();
   const { products, loading } = useSelector((state) => state.products);
@@ -218,15 +244,141 @@ const Home = () => {
     return () => clearInterval(timer);
   }, [totalFeatureSlides]);
 
+  const [current, setCurrent] = useState(0);
+  const slideLength = slides.length;
+
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentProduct((prev) => (prev + 1) % Homeproducts.length);
-    }, 5000);
-    return () => clearInterval(timer);
-  }, []);
+    const interval = setInterval(() => {
+      setCurrent((prev) => (prev === slideLength - 1 ? 0 : prev + 1));
+    }, 20000);
+
+    return () => clearInterval(interval);
+  }, [slideLength]);
+
+  const nextSlide = () => {
+    setCurrent((prev) => (prev === slideLength - 1 ? 0 : prev + 1));
+  };
+
+  const prevSlide = () => {
+    setCurrent((prev) => (prev === 0 ? slideLength - 1 : prev - 1));
+  };
 
   return (
     <div className="font-sans">
+      <div className="relative w-full h-screen overflow-hidden font-sans group">
+        {slides.map((slide, index) => (
+          <div
+            key={slide.id}
+            className={`absolute inset-0 transition-opacity duration-1000 ${
+              index === current ? "opacity-100 z-10" : "opacity-0 z-0"
+            }`}
+          >
+            <img
+              src={slide.img}
+              alt="slide"
+              className="w-full h-full object-cover"
+            />
+
+            <AnimatePresence mode="wait">
+              {index === current && (
+                <motion.div
+                  key={slide.id}
+                  initial={{
+                    opacity: 0,
+                    x:
+                      slide.position === "right"
+                        ? 100
+                        : slide.position === "left"
+                        ? -100
+                        : 0,
+                  }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{
+                    opacity: 0,
+                    x:
+                      slide.position === "right"
+                        ? 100
+                        : slide.position === "left"
+                        ? -100
+                        : 0,
+                  }}
+                  transition={{ duration: 0.8, ease: "easeOut" }}
+                  className={`absolute inset-0 z-10 flex items-center justify-center md:justify-${slide.position} px-4`}
+                >
+                  <div className="max-w-xl w-full text-center md:text-center bg-white/60 md:bg-transparent p-6 md:p-8 rounded-md">
+                    {slide.heading.map((line, i) => (
+                      <motion.h2
+                        key={i}
+                        initial={{
+                          opacity: 0,
+                          x:
+                            slide.position === "right"
+                              ? 100
+                              : slide.position === "left"
+                              ? -100
+                              : 0,
+                        }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{
+                          opacity: 0,
+                          x:
+                            slide.position === "right"
+                              ? 100
+                              : slide.position === "left"
+                              ? -100
+                              : 0,
+                        }}
+                        transition={{
+                          duration: 0.8,
+                          delay: i * 0.2,
+                          ease: "easeOut",
+                        }}
+                        className="text-lg sm:text-2xl md:text-4xl font-semibold leading-tight text-black mb-2"
+                      >
+                        {line}
+                      </motion.h2>
+                    ))}
+
+                    <div className="flex justify-center gap-4 mt-4">
+                      {slide.sublinks.map((link, i) => (
+                        <WaveButton key={i} label={link} />
+                      ))}
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        ))}
+
+        {/* Arrows shown only on hover */}
+        <button
+          className="absolute left-2 sm:left-4 md:left-6 top-1/2 transform -translate-y-1/2 p-4 bg-blue-100 hover:bg-[#e9cdbb] z-20 hidden group-hover:block"
+          onClick={prevSlide}
+        >
+          <ArrowLeft />
+        </button>
+        <button
+          className="absolute p-4 right-2 sm:right-4 md:right-6 top-1/2 transform -translate-y-1/2  bg-blue-100 hover:bg-[#e9cdbb] z-20 hidden group-hover:block"
+          onClick={nextSlide}
+        >
+          <ArrowRight />
+        </button>
+
+        {/* Dots */}
+        <div className="absolute bottom-4 sm:bottom-6 left-1/2 transform -translate-x-1/2 flex gap-2 z-20">
+          {slides.map((_, i) => (
+            <span
+              key={i}
+              onClick={() => setCurrent(i)}
+              className={`h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full cursor-pointer transition-all duration-300 ${
+                i === current ? "bg-gray-800" : "bg-gray-400"
+              }`}
+            ></span>
+          ))}
+        </div>
+      </div>
+
       {/*  Feature Section  */}
       <section className="bg-orange-50 py-16 px-4 text-center flex flex-col justify-center">
         <motion.h2
@@ -246,7 +398,8 @@ const Home = () => {
         >
           Discover our handcrafted soaps made from pure, organic ingredients.
           Each bar is free from harmful chemicals and designed to gently
-          nourish, hydrate, and protect your skin—just the way nature intended.
+          nourish, hydrate, and protect your skin - just the way nature
+          intended.
         </motion.p>
 
         {/* Feature Cards */}
@@ -330,7 +483,7 @@ const Home = () => {
               your natural glow—gently.
             </p>
             <div className="w-fit mx-auto md:mx-0">
-              <WaveButton label="SHOP NOW" />
+              <WaveButton label="SHOP ALL" />
             </div>
           </motion.div>
 
@@ -365,7 +518,7 @@ const Home = () => {
 
         {/* Product Dots (Mobile Only) */}
         <div className="mt-8 flex justify-center gap-2 md:hidden">
-          {products.map((_, index) => (
+          {Homeproducts.map((_, index) => (
             <button
               key={index}
               onClick={() => setCurrentProduct(index)}
@@ -441,7 +594,7 @@ const Home = () => {
         variants={containerVariants}
       >
         {/* Overlay (optional) */}
-        <div className="absolute inset-0 bg-white/70 z-0"></div>
+        <div className="absolute inset-0 bg-white/30 z-0"></div>
 
         {/* Foreground Content */}
         <div className="relative z-10 max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-10 items-center">

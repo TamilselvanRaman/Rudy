@@ -21,6 +21,8 @@ import ProtectedAdminRoute from "./ProtectedAdminRoute";
 
 // Layout wrapper
 import Layout from "./Layout";
+// import Profile from "../Pages/User/Profile";
+import ProfilePage from "../Pages/User/ProfilePage";
 
 function Routers() {
   return (
@@ -29,6 +31,7 @@ function Routers() {
         {/* Public routes without layout */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/checkout" element={<Checkout />} />
 
         {/* Layout route wraps common UI */}
         <Route element={<Layout />}>
@@ -36,14 +39,13 @@ function Routers() {
           <Route path="/products" element={<Products />} />
           <Route path="/products/:id" element={<ProductDetail />} />
           <Route path="/cartpage" element={<CartPage />} />
-          <Route path="/checkout" element={<Checkout />} />
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/wishlist" element={<Wishlist />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/faq" element={<FaqPage />} />
           <Route path="/collections" element={<Collections />} />
           <Route path="/compare" element={<Compare />} />
-          <Route path="*" element={<NotFound />} />
+          <Route path="/profile" element={<ProfilePage />} />
         </Route>
 
         {/* Protected admin route */}
@@ -55,6 +57,7 @@ function Routers() {
             </ProtectedAdminRoute>
           }
         />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </Router>
   );

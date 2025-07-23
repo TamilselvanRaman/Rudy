@@ -40,7 +40,7 @@ function Login() {
         if (userData.role === "admin" && currentUser.email === adminEmail) {
           navigate("/adminpanel");
         } else {
-          navigate("/home");
+          navigate("/");
         }
       };
 

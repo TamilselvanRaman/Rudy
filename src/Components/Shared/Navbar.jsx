@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   FaBars,
@@ -7,25 +7,71 @@ import {
   FaFacebook,
   FaInstagram,
   FaUser,
+  FaTwitter,
+  FaPinterest,
+  FaPinterestP,
+  FaArrowRight,
+  FaArrowLeft,
 } from "react-icons/fa";
 import { MdLocalMall } from "react-icons/md";
 import { ChevronDown } from "lucide-react";
+import { FaShoppingCart } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSelector, useDispatch } from "react-redux";
 import { setCartOpen, toggleCartOpen } from "../../redux/slices/cartSlice";
+import { ref, get, child } from "firebase/database";
+import { database } from "../../firebase/firebaseConfig";
 
-const MegaMenuSection = ({ title, items }) => (
-  <div>
-    <h4 className="font-bold mb-2">{title}</h4>
-    <ul className="space-y-1 leading-6">
-      {items.map((item) => (
-        <li key={item} className="hover:text-[#f9ddda] cursor-pointer">
-          {item}
-        </li>
-      ))}
-    </ul>
-  </div>
-);
+const MegaMenuSection = ({ title, items }) => {
+  const navigate = useNavigate();
+
+  const handleItemClick = async (itemName) => {
+    try {
+      const dbRef = ref(database);
+      const snapshot = await get(child(dbRef, "products"));
+      if (snapshot.exists()) {
+        const categories = snapshot.val();
+
+        for (let category in categories) {
+          const products = categories[category];
+          for (let productId in products) {
+            if (
+              products[productId].name?.toLowerCase() === itemName.toLowerCase()
+            ) {
+              // If a match is found, navigate to the product page
+              console.log(`Navigating to product: ${products[productId].name}`);
+              navigate(`/products/${productId}`);
+              return;
+            }
+          }
+        }
+        // alert("Product not found in database.");
+        navigate("/not-found");
+      } else {
+        console.error("No data found.");
+      }
+    } catch (error) {
+      console.error("Error fetching product:", error);
+    }
+  };
+
+  return (
+    <div>
+      <h4 className="font-bold mb-2">{title}</h4>
+      <ul className="space-y-1 leading-6">
+        {items.map((item) => (
+          <li
+            key={item}
+            onClick={() => handleItemClick(item)}
+            className="hover:text-white cursor-pointer"
+          >
+            {item}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+};
 
 const dropdownAnimation = {
   initial: { opacity: 0, y: 20 },
@@ -123,14 +169,28 @@ const MENUS = {
 
 const Navbar = () => {
   const [openMenu, setOpenMenu] = useState(null);
-  const [mobileMenu, setMobileMenu] = useState(false);
   const [mobileSubMenu, setMobileSubMenu] = useState(null);
   const timerRef = useRef(null);
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const [activeMenu, setActiveMenu] = useState("");
+  const [mobileMenu, setMobileMenu] = useState(false);
+  const [menuLevel, setMenuLevel] = useState(0);
 
-  const cartItems = useSelector((state) => state.cart?.cartItems || []);
+  useEffect(() => {
+    if (mobileMenu) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileMenu]);
+
+  const { cartItems = [] } = useSelector((state) => state.cart || {});
 
   const handleMouseEnter = (menu) => {
     clearTimeout(timerRef.current);
@@ -147,6 +207,36 @@ const Navbar = () => {
         : "text-black"
     }`;
 
+  const handleItemClick = async (itemName) => {
+    try {
+      const dbRef = ref(database);
+      const snapshot = await get(child(dbRef, "products"));
+      if (snapshot.exists()) {
+        const categories = snapshot.val();
+
+        for (let category in categories) {
+          const products = categories[category];
+          for (let productId in products) {
+            if (
+              products[productId].name?.toLowerCase() === itemName.toLowerCase()
+            ) {
+              // If a match is found, navigate to the product page
+              console.log(`Navigating to product: ${products[productId].name}`);
+              navigate(`/products/${productId}`);
+              return;
+            }
+          }
+        }
+        // alert("Product not found in database.");
+        navigate("/not-found");
+      } else {
+        console.error("No data found.");
+      }
+    } catch (error) {
+      console.error("Error fetching product:", error);
+    }
+  };
+
   const toggleMobileSubMenu = (menu) =>
     setMobileSubMenu(mobileSubMenu === menu ? null : menu);
 
@@ -161,7 +251,7 @@ const Navbar = () => {
   return (
     <nav className="bg-white shadow-sm relative z-50">
       {/* Top nav */}
-      <div className="max-w-[1200px] mx-auto px-4 flex justify-between items-center h-16">
+      <div className="max-w-[1200px] hidden md:hidden lg:flex mx-auto px-4  justify-between items-center h-16">
         {/* Desktop Left Menu */}
         <ul className="hidden lg:flex items-center gap-6 text-sm font-semibold">
           <li
@@ -266,7 +356,10 @@ const Navbar = () => {
 
         {/* Logo */}
 
-        <Link to="/" className="text-2xl font-bold">
+        <Link
+          to="/"
+          className="hidden md:hidden lg:block no-underline text-2xl font-bold"
+        >
           Rudy.
         </Link>
 
@@ -297,7 +390,7 @@ const Navbar = () => {
                       <Link
                         to="/about"
                         onClick={() => handleClick("ABOUT")}
-                        className="hover:text-[#f9bdbb]"
+                        className="hover:text-white transition"
                       >
                         About
                       </Link>
@@ -306,7 +399,7 @@ const Navbar = () => {
                       <Link
                         to="/faq"
                         onClick={() => handleClick("FAQ")}
-                        className="hover:text-[#f9bdbb]"
+                        className="hover:text-white transition"
                       >
                         FAQ
                       </Link>
@@ -325,21 +418,34 @@ const Navbar = () => {
           >
             <Link to="/contact">CONTACT</Link>
           </li>
-          <li>
-            <Link to="/wishlist">
-              <FaHeart />
+
+          <li className="relative">
+            <Link
+              to="/profile"
+              className="relative hover:text-[#ffdac1] transition"
+            >
+              <FaUser size={18} />
             </Link>
           </li>
           <li className="relative">
+            <Link
+              to="/wishlist"
+              className="relative hover:text-[#ffdac1] transition"
+            >
+              <FaHeart size={18} />
+            </Link>
+          </li>
+
+          <li className="relative mt-1">
             <button
               onClick={() => {
                 dispatch(setCartOpen(true));
                 console.log("Cart icon clicked");
               }}
-              className="relative hover:text-rose-400 transition"
+              className="relative hover:text-[#ffdac1] transition"
             >
-              <MdLocalMall size={18} />
-              <span className="absolute -top-2 -right-2 bg-black text-white text-[10px] rounded-full px-1 min-w-[16px] text-center">
+              <FaShoppingCart size={18} />
+              <span className="absolute -top-2 left-4.5 bg-black text-white text-[9px] rounded-full px-1 min-w-[13px] text-center">
                 {cartItems.length > 99 ? "99+" : cartItems.length}
               </span>
             </button>
@@ -359,12 +465,15 @@ const Navbar = () => {
               <FaHeart />
             </Link>
             <button>
-              <MdLocalMall
+              <FaShoppingCart
                 onClick={() => {
                   dispatch(toggleCartOpen(true));
-                  console.log("Cart icon clicked");
+                  // console.log("Cart icon clicked");
                 }}
               />
+              <span className="absolute top-3 right-1 bg-black text-white text-[9px] rounded-full px-1 min-w-[13px] text-center">
+                {cartItems.length > 99 ? "99+" : cartItems.length}
+              </span>
             </button>
           </div>
         </div>
@@ -373,182 +482,197 @@ const Navbar = () => {
       {/* Mobile Menu Panel */}
       <AnimatePresence>
         {mobileMenu && (
-          <motion.section
-            key="mobile-menu"
-            initial={{ x: "-100%" }}
-            animate={{ x: 0 }}
-            exit={{ x: "-100%" }}
-            transition={{ duration: 0.3 }}
-            className="lg:hidden fixed top-0 left-0 w-full max-w-[350px] h-full bg-white shadow-lg z-[100] flex flex-col"
-          >
-            {/* Header */}
-            <div className="flex justify-between items-center p-4 border-b">
-              <div className="text-xl font-bold">Rudy.</div>
-              <button onClick={() => setMobileMenu(false)}>
-                <FaTimes size={22} />
-              </button>
-            </div>
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.5 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black z-[90]"
+              onClick={() => setMobileMenu(false)}
+            />
 
-            {/* Main Menu */}
-            <ul className="flex-1 p-4 space-y-2 text-base font-semibold overflow-y-auto">
-              <li>
-                <Link to="/" onClick={() => setMobileMenu(false)}>
-                  HOME
-                </Link>
-              </li>
+            {/* Sidebar Panel */}
+            <motion.section
+              key="mobile-menu"
+              initial={{ x: "-100%", opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: "-100%", opacity: 0 }}
+              transition={{ type: "spring", stiffness: 100, damping: 20 }}
+              className="lg:hidden fixed top-0 left-0 w-full max-w-[320px] h-full bg-white shadow-2xl z-[100] flex flex-col overflow-hidden"
+            >
+              {/* Main Menu */}
+              {menuLevel === 0 && (
+                <div className="flex flex-col h-full">
+                  <ul className="flex-1 px-6 py-4 space-y-4 text-[17px] font-semibold text-gray-800 overflow-y-auto">
+                    <li>
+                      <Link
+                        to="/"
+                        onClick={() => setMobileMenu(false)}
+                        className="hover:text-primary"
+                      >
+                        Home
+                      </Link>
+                    </li>
+                    <li>
+                      <button
+                        onClick={() => {
+                          setActiveMenu("bath");
+                          setMenuLevel(1);
+                        }}
+                        className="flex justify-between items-center w-full hover:text-primary"
+                      >
+                        Bath Soap <FaArrowRight />
+                      </button>
+                    </li>
+                    <li>
+                      <button
+                        onClick={() => {
+                          setActiveMenu("collections");
+                          setMenuLevel(1);
+                        }}
+                        className="flex justify-between items-center w-full hover:text-primary"
+                      >
+                        Collections <FaArrowRight />
+                      </button>
+                    </li>
+                    <li>
+                      <button
+                        onClick={() => {
+                          setActiveMenu("pages");
+                          setMenuLevel(1);
+                        }}
+                        className="flex justify-between items-center w-full hover:text-primary"
+                      >
+                        Pages <FaArrowRight />
+                      </button>
+                    </li>
+                    <li>
+                      <Link
+                        to="/contact"
+                        onClick={() => setMobileMenu(false)}
+                        className="hover:text-primary"
+                      >
+                        Contact
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        to="/profile"
+                        onClick={() => setMobileMenu(false)}
+                        className="hover:text-primary"
+                      >
+                        Profile
+                      </Link>
+                    </li>
+                  </ul>
 
-              {/* Bath Soap */}
-              <li>
-                <button
-                  className="flex justify-between items-center w-full py-2"
-                  onClick={() => toggleMobileSubMenu("bath")}
-                >
-                  BATH SOAP
-                  <ChevronDown
-                    size={16}
-                    className={`transition-transform ${
-                      mobileSubMenu === "bath" ? "rotate-180" : ""
-                    }`}
-                  />
-                </button>
-                <AnimatePresence>
-                  {mobileSubMenu === "bath" && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: "auto", opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      className="pl-4 py-2 bg-gray-50 rounded space-y-2"
+                  <div className="mt-auto p-4 border-t">
+                    <button
+                      onClick={() => navigate("/login")}
+                      className="flex items-center gap-3 font-medium text-gray-700 hover:text-black"
                     >
-                      {MENUS.bath.sections.map((section, i) => (
-                        <div key={i}>
-                          <h4 className="font-semibold text-sm">
-                            {section.title}
-                          </h4>
-                          <ul className="ml-2 text-sm text-gray-700">
-                            {section.items.map((item) => (
-                              <li key={item} className="py-0.5">
-                                {item}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      ))}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </li>
+                      <FaUser className="text-lg" />
+                      <span className="text-base font-semibold">Log in</span>
+                    </button>
+                    <div className="mt-4 flex items-center gap-4 text-xl text-gray-600">
+                      <FaTwitter className="hover:text-black" />
+                      <FaFacebook className="hover:text-black" />
+                      <FaPinterest className="hover:text-black" />
+                      <FaInstagram className="hover:text-black" />
+                    </div>
+                  </div>
+                </div>
+              )}
 
-              {/* Collections */}
-              <li>
-                <button
-                  className="flex justify-between items-center w-full py-2"
-                  onClick={() => {
-                    navigate("/collections");
-                  }}
+              {/* Submenu */}
+              {menuLevel === 1 && (
+                <motion.div
+                  key="submenu"
+                  initial={{ x: "100%", opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  exit={{ x: "100%", opacity: 0 }}
+                  transition={{ type: "spring", stiffness: 90, damping: 18 }}
+                  className="absolute top-0 left-0 w-full max-w-[360px] h-full bg-white flex flex-col shadow-2xl rounded-tr-2xl rounded-br-2xl overflow-hidden"
                 >
-                  COLLECTIONS
-                  <ChevronDown
-                    size={16}
-                    className={`transition-transform ${
-                      mobileSubMenu === "collections" ? "rotate-180" : ""
-                    }`}
-                  />
-                </button>
-                <AnimatePresence>
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    className="pl-4 py-2 bg-gray-50 rounded space-y-2"
-                  >
-                    {MENUS.collections.sections.map((section, i) => (
+                  {/* Header */}
+                  <div className="flex items-center gap-3 px-5 py-4 border-b bg-gray-100 shadow">
+                    <button
+                      onClick={() => setMenuLevel(0)}
+                      className="text-gray-700 hover:text-primary text-xl"
+                      aria-label="Back"
+                    >
+                      <FaArrowLeft />
+                    </button>
+                    <h3 className="text-lg font-bold capitalize text-gray-900">
+                      {activeMenu}
+                    </h3>
+                  </div>
+
+                  {/* Top Image */}
+                  {MENUS[activeMenu]?.images?.[0] && (
+                    <div className="px-5 pt-4">
+                      <img
+                        src={MENUS[activeMenu].images[0]}
+                        alt="Top visual"
+                        className="w-full h-32 object-cover rounded-xl shadow"
+                      />
+                    </div>
+                  )}
+
+                  {/* Sections */}
+                  <div className="flex-1 overflow-y-auto px-6 py-5 space-y-8">
+                    {MENUS[activeMenu]?.sections?.map((section, i) => (
                       <div key={i}>
-                        <h4 className="font-semibold text-sm">
+                        <h4 className="text-[17px] font-semibold text-gray-800 mb-3">
                           {section.title}
                         </h4>
-                        <ul className="ml-2 text-sm text-gray-700">
+                        <ul className="space-y-2 text-[15px] text-gray-600">
                           {section.items.map((item) => (
-                            <li key={item} className="py-0.5">
+                            <li
+                              key={item}
+                              onClick={() => handleItemClick(item)}
+                              className="hover:text-primary cursor-pointer transition-colors"
+                            >
                               {item}
                             </li>
                           ))}
                         </ul>
                       </div>
                     ))}
-                  </motion.div>
-                </AnimatePresence>
-              </li>
+                  </div>
 
-              {/* Pages */}
-              <li>
-                <button
-                  className="flex justify-between items-center w-full py-2"
-                  onClick={() => toggleMobileSubMenu("pages")}
-                >
-                  PAGES
-                  <ChevronDown
-                    size={16}
-                    className={`transition-transform ${
-                      mobileSubMenu === "pages" ? "rotate-180" : ""
-                    }`}
-                  />
-                </button>
-                <AnimatePresence>
-                  {mobileSubMenu === "pages" && (
-                    <motion.ul
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: "auto", opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      className="pl-4 py-2 space-y-1 bg-gray-50 rounded"
-                    >
-                      <li>
-                        <Link to="/about" onClick={() => setMobileMenu(false)}>
-                          About
-                        </Link>
-                      </li>
-                      <li>
-                        <Link to="/faq" onClick={() => setMobileMenu(false)}>
-                          FAQ
-                        </Link>
-                      </li>
-                    </motion.ul>
+                  {/* Bottom Image */}
+                  {MENUS[activeMenu]?.images?.[1] && (
+                    <div className="px-5 pb-4">
+                      <img
+                        src={MENUS[activeMenu].images[1]}
+                        alt="Bottom visual"
+                        className="w-full h-32 object-cover rounded-xl shadow"
+                      />
+                    </div>
                   )}
-                </AnimatePresence>
-              </li>
 
-              {/* Contact */}
-              <li>
-                <Link to="/contact" onClick={() => setMobileMenu(false)}>
-                  CONTACT
-                </Link>
-              </li>
-            </ul>
-
-            {/* Bottom Social & Utility Links */}
-            <div className="p-4 border-t flex flex-col gap-4">
-              <Link
-                to="/login"
-                className="flex items-center gap-2 font-medium text-black hover:text-[#f9bdbb]"
-              >
-                <FaUser />
-                <span>Log in</span>
-              </Link>
-              <div className="flex gap-4 text-lg">
-                <Link to="/wishlist">
-                  <FaHeart />
-                </Link>
-                <Link to="/">
-                  <MdLocalMall />
-                </Link>
-                <a href="#">
-                  <FaFacebook />
-                </a>
-                <a href="#">
-                  <FaInstagram />
-                </a>
-              </div>
-            </div>
-          </motion.section>
+                  {/* Footer */}
+                  <div className="p-5 border-t mt-auto">
+                    <button
+                      onClick={() => navigate("/login")}
+                      className="flex items-center gap-3 text-[15px] text-gray-700 hover:text-black font-medium"
+                    >
+                      <FaUser className="text-xl" />
+                      <span className="font-semibold">Log in</span>
+                    </button>
+                    <div className="mt-4 flex items-center gap-5 text-2xl text-gray-600">
+                      <FaTwitter className="hover:text-black transition" />
+                      <FaFacebook className="hover:text-black transition" />
+                      <FaPinterest className="hover:text-black transition" />
+                      <FaInstagram className="hover:text-black transition" />
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </motion.section>
+          </>
         )}
       </AnimatePresence>
     </nav>

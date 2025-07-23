@@ -1,3 +1,4 @@
+// Updated cartSlice with flat uid-based structure
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { ref, get, push, update, remove, set } from "firebase/database";
 import { database } from "../../firebase/firebaseConfig";
@@ -8,7 +9,7 @@ const getUserCartRef = (uid) => ref(database, `cart/${uid}`);
 // Fetch cart items from Firebase
 export const fetchCart = createAsyncThunk(
   "cart/fetch",
-  async (uid, { rejectWithValue }) => {
+  async ({ uid }, { rejectWithValue }) => {
     try {
       const snapshot = await get(getUserCartRef(uid));
       const data = snapshot.val();
@@ -24,6 +25,7 @@ export const fetchCart = createAsyncThunk(
     }
   }
 );
+
 
 // Add or update item in cart
 export const addToCart = createAsyncThunk(
@@ -46,12 +48,12 @@ export const addToCart = createAsyncThunk(
         await update(ref(database, `cart/${uid}/${key}`), {
           quantity: existingItem.quantity + newItem.quantity,
         });
-        return dispatch(fetchCart(uid));
+        return dispatch(fetchCart({ uid }));
       }
     }
 
     await push(cartRef, newItem);
-    dispatch(fetchCart(uid));
+    dispatch(fetchCart({ uid }));
   }
 );
 
@@ -64,7 +66,7 @@ export const increaseQuantity = createAsyncThunk(
     const item = snapshot.val();
     if (item) {
       await update(itemRef, { quantity: item.quantity + 1 });
-      dispatch(fetchCart(uid));
+      dispatch(fetchCart({ uid }));
     }
   }
 );
@@ -82,7 +84,7 @@ export const decreaseQuantity = createAsyncThunk(
       } else {
         await update(itemRef, { quantity: item.quantity - 1 });
       }
-      dispatch(fetchCart(uid));
+      dispatch(fetchCart({ uid }));
     }
   }
 );
@@ -92,16 +94,16 @@ export const removeFromCart = createAsyncThunk(
   "cart/remove",
   async ({ uid, firebaseId }, { dispatch }) => {
     await remove(ref(database, `cart/${uid}/${firebaseId}`));
-    dispatch(fetchCart(uid));
+    dispatch(fetchCart({ uid }));
   }
 );
 
 // Clear all items from cart
 export const clearCart = createAsyncThunk(
   "cart/clear",
-  async (uid, { dispatch }) => {
+  async ({ uid }, { dispatch }) => {
     await set(getUserCartRef(uid), null);
-    dispatch(fetchCart(uid));
+    dispatch(fetchCart({ uid }));
   }
 );
 
@@ -139,6 +141,5 @@ const cartSlice = createSlice({
   },
 });
 
-// Export actions and reducer
 export const { setCartOpen, toggleCartOpen } = cartSlice.actions;
 export default cartSlice.reducer;

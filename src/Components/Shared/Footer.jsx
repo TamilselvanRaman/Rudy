@@ -175,7 +175,7 @@ const Footer = () => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 30 }}
             transition={{ duration: 0.3 }}
-            className="fixed bottom-6 right-6 bg-[#edc5a2] text-black p-2 rounded hover:bg-[#eab38a] transition"
+            className="fixed bottom-17 right-10 bg-[#edc5a2] text-black p-2 hover:bg-black/80 hover:text-[#edc5a2]  transition-opacity cursor-pointer shadow-lg z-50 flex items-center justify-center"
             aria-label="Scroll to top"
           >
             <FaArrowUp />

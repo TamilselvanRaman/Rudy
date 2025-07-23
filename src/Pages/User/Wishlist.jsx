@@ -6,12 +6,12 @@ import {
   fetchWishlist,
   removeWishlistItem,
 } from "../../redux/slices/wishlistSlice";
-import { useAuth } from "../../hooks/useAuth"; // Assuming a custom hook to get currentUser
+import { useAuth } from "../../hooks/useAuth";
 
 export default function Wishlist() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { currentUser } = useAuth(); // Replace with your AuthContext logic
+  const { currentUser } = useAuth();
   const { items: wishlistItems, loading } = useSelector(
     (state) => state.wishlist
   );
@@ -31,16 +31,18 @@ export default function Wishlist() {
   return (
     <div className="min-h-screen bg-white flex flex-col items-center">
       {/* Banner */}
-      <div className="relative w-full h-60 flex flex-col items-center justify-center text-white">
+      <div className="relative w-full h-72 flex flex-col items-center justify-center text-white">
         <img
           src="/banner-image.jpg"
           alt="Wishlist Banner"
           className="absolute inset-0 w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-black/40" />
+        <div className="absolute inset-0 bg-black/20" />
         <div className="relative z-10 text-center">
-          <h1 className="text-3xl font-semibold tracking-widest">WISHLIST</h1>
-          <p className="text-sm mt-1 text-gray-300">Home / Wishlist</p>
+          <h1 className="text-4xl font-semibold tracking-widest">WISHLIST</h1>
+          <p className="text-md mt-1 font-semibold text-white">
+            Home / Wishlist
+          </p>
         </div>
       </div>
 
@@ -53,7 +55,7 @@ export default function Wishlist() {
       ) : (
         <>
           {/* Desktop Table View */}
-          <div className="hidden md:block w-full max-w-5xl mt-8 border border-gray-300 rounded-sm overflow-x-auto">
+          <div className="hidden md:block w-full max-w-5xl mt-15 border mb-15 border-gray-300 rounded-sm overflow-x-auto">
             <table className="w-full table-auto border-collapse">
               <thead>
                 <tr className="bg-[#c2d8e0] text-sm uppercase font-medium text-gray-700 text-center border-b border-black/40">
@@ -102,7 +104,7 @@ export default function Wishlist() {
                     <td className="px-4 py-4">
                       <button
                         onClick={() => navigate(`/products/${item.id}`)}
-                        className="bg-[#c2d8e0] hover:bg-[#a4c3d0] text-black text-sm px-4 py-2 rounded-sm transition"
+                        className="bg-[#c2d8e0] hover:bg-[#ffdac1] hover:text-black/80 cursor-pointer font-semibold text-black text-sm px-4 py-2  transition"
                       >
                         SELECT OPTIONS
                       </button>
@@ -110,7 +112,7 @@ export default function Wishlist() {
                     <td className="px-4 py-4">
                       <button
                         onClick={() => handleRemove(item.id)}
-                        className="text-gray-600 hover:text-red-500"
+                        className="text-gray-600 hover:text-[#ffdac1] cursor-pointer transition"
                       >
                         <Trash2 size={18} />
                       </button>
@@ -122,7 +124,7 @@ export default function Wishlist() {
           </div>
 
           {/* Mobile Card View */}
-          <div className="md:hidden w-full px-4 mt-8 space-y-6">
+          <div className="md:hidden w-full px-4 mt-8 mb-10 space-y-6">
             {wishlistItems.map((item) => (
               <div
                 key={item.id}

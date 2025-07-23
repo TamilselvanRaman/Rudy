@@ -1,4 +1,3 @@
-// Cart.jsx (Redux Version)
 import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -18,6 +17,9 @@ const Cart = () => {
 
   const cartItems = useSelector((state) => state.cart.cartItems);
   const isOpen = useSelector((state) => state.cart.isOpen);
+  const currentUser = useSelector((state) => state.auth.currentUser);
+  const uid = currentUser?.uid;
+  const groupId = currentUser?.uid;
 
   const subtotal = cartItems
     .reduce((sum, item) => sum + item.price * item.quantity, 0)
@@ -106,7 +108,13 @@ const Cart = () => {
                         <div className="flex items-center gap-2 mt-2">
                           <button
                             onClick={() =>
-                              dispatch(decreaseQuantity(item.firebaseId))
+                              dispatch(
+                                decreaseQuantity({
+                                  uid,
+                                  groupId,
+                                  firebaseId: item.firebaseId,
+                                })
+                              )
                             }
                             disabled={item.quantity <= 1}
                             className={`w-8 h-8 border rounded flex items-center justify-center ${
@@ -122,7 +130,13 @@ const Cart = () => {
                           </span>
                           <button
                             onClick={() =>
-                              dispatch(increaseQuantity(item.firebaseId))
+                              dispatch(
+                                increaseQuantity({
+                                  uid,
+                                  groupId,
+                                  firebaseId: item.firebaseId,
+                                })
+                              )
                             }
                             className="w-8 h-8 border rounded flex items-center justify-center hover:bg-[#f1e5df]"
                           >
@@ -130,7 +144,13 @@ const Cart = () => {
                           </button>
                           <button
                             onClick={() =>
-                              dispatch(removeFromCart(item.firebaseId))
+                              dispatch(
+                                removeFromCart({
+                                  uid,
+                                  groupId,
+                                  firebaseId: item.firebaseId,
+                                })
+                              )
                             }
                             className="ml-2 p-2 bg-[#C48D69] hover:bg-[#a56d4e] text-white rounded"
                           >
@@ -190,7 +210,7 @@ const Cart = () => {
                   <button
                     onClick={() => {
                       dispatch(toggleCartOpen(false));
-                      navigate("/cart");
+                      navigate("/cartpage");
                     }}
                     className="w-1/2 bg-[#f1e5df] hover:bg-[#e2cfc2] text-black py-2 rounded font-medium"
                   >

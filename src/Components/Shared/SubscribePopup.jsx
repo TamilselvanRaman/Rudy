@@ -12,7 +12,7 @@ const SubscribePopup = () => {
         {/* Background Image Section */}
         <div
           className="relative h-80 bg-cover bg-center"
-          style={{ backgroundImage: `url('/banner-image.jpg')` }}
+          style={{ backgroundImage: `url('/bannerImage.jpg')` }}
         >
           {/* Close Button */}
           <button
