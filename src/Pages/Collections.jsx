@@ -27,17 +27,10 @@ const Collections = () => {
   return (
     <div>
       {/* Banner */}
-      <div
-        className="bg-cover bg-center h-64 flex flex-col justify-center items-center text-black"
-        style={{
-          backgroundImage: `url('/banner-image.jpg')`,
-          backgroundColor: "rgba(255,255,255,0.4)",
-          backgroundBlendMode: "lighten",
-        }}
-      >
-        <h1 className="text-3xl font-bold uppercase">ALL COLLECTIONS</h1>
-        <p className="text-lg mt-2">Home / collections</p>
-      </div>
+      <BannerComponent
+        title="Collections"
+        subtitle="Home / Collections"
+      />
 
       <div className="max-w-7xl mx-auto px-4 py-16 bg-white">
         {loading ? (

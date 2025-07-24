@@ -3,8 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, Plus, Minus, X } from "lucide-react";
 import BestSellerCarousel from "./BestSellerCarousel";
 import FilterSection from "./FilterSection";
-import { BiFilterAlt } from "react-icons/bi";
-import { Dialog } from "@headlessui/react";
+
 
 const checkboxItem = (label, checked, onChange) => (
   <label

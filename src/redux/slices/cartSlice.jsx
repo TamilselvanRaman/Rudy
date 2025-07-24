@@ -26,7 +26,6 @@ export const fetchCart = createAsyncThunk(
   }
 );
 
-
 // Add or update item in cart
 export const addToCart = createAsyncThunk(
   "cart/add",
@@ -46,13 +45,13 @@ export const addToCart = createAsyncThunk(
       if (existingEntry) {
         const [key, existingItem] = existingEntry;
         await update(ref(database, `cart/${uid}/${key}`), {
-          quantity: existingItem.quantity + newItem.quantity,
+          quantity: existingItem.quantity + (newItem.quantity || 1),
         });
         return dispatch(fetchCart({ uid }));
       }
     }
 
-    await push(cartRef, newItem);
+    await push(cartRef, { ...newItem, quantity: newItem.quantity || 1 });
     dispatch(fetchCart({ uid }));
   }
 );

@@ -31,20 +31,10 @@ export default function Wishlist() {
   return (
     <div className="min-h-screen bg-white flex flex-col items-center">
       {/* Banner */}
-      <div className="relative w-full h-72 flex flex-col items-center justify-center text-white">
-        <img
-          src="/banner-image.jpg"
-          alt="Wishlist Banner"
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-black/20" />
-        <div className="relative z-10 text-center">
-          <h1 className="text-4xl font-semibold tracking-widest">WISHLIST</h1>
-          <p className="text-md mt-1 font-semibold text-white">
-            Home / Wishlist
-          </p>
-        </div>
-      </div>
+      <BannerComponent
+        title="Your Wishlist"
+        subtitle="Home / Your Wishlist"
+      />
 
       {loading ? (
         <div className="p-6 text-center">Loading...</div>

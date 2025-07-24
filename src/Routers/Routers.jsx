@@ -32,6 +32,7 @@ function Routers() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/checkout" element={<Checkout />} />
+        <Route path="/profile" element={<ProfilePage />} />
 
         {/* Layout route wraps common UI */}
         <Route element={<Layout />}>
@@ -45,7 +46,6 @@ function Routers() {
           <Route path="/faq" element={<FaqPage />} />
           <Route path="/collections" element={<Collections />} />
           <Route path="/compare" element={<Compare />} />
-          <Route path="/profile" element={<ProfilePage />} />
         </Route>
 
         {/* Protected admin route */}

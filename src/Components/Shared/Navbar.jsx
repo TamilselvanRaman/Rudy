@@ -499,7 +499,7 @@ const Navbar = () => {
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: "-100%", opacity: 0 }}
               transition={{ type: "spring", stiffness: 100, damping: 20 }}
-              className="lg:hidden fixed top-0 left-0 w-full max-w-[320px] h-full bg-white shadow-2xl z-[100] flex flex-col overflow-hidden"
+              className="lg:hidden fixed top-0 left-0 w-full max-w-[320px] h-full bg-white shadow-2xl py-15 z-[100] flex flex-col overflow-hidden"
             >
               {/* Main Menu */}
               {menuLevel === 0 && (
@@ -592,8 +592,8 @@ const Navbar = () => {
                   initial={{ x: "100%", opacity: 0 }}
                   animate={{ x: 0, opacity: 1 }}
                   exit={{ x: "100%", opacity: 0 }}
-                  transition={{ type: "spring", stiffness: 90, damping: 18 }}
-                  className="absolute top-0 left-0 w-full max-w-[360px] h-full bg-white flex flex-col shadow-2xl rounded-tr-2xl rounded-br-2xl overflow-hidden"
+                  // transition={{ type: "spring", stiffness: 90, damping: 18 }}
+                  className="absolute top-0 left-0 w-full max-w-[360px] h-full bg-white flex flex-col shadow-2xl rounded-tr-2xl rounded-br-2xl overflow-hidden mb-30"
                 >
                   {/* Header */}
                   <div className="flex items-center gap-3 px-5 py-4 border-b bg-gray-100 shadow">

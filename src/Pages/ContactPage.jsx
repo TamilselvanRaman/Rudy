@@ -5,10 +5,7 @@ const ContactPage = () => {
   return (
     <div className="min-h-screen bg-white py-10 px-4">
       {/* Header */}
-      <div className="text-center mb-10">
-        <h1 className="text-2xl font-bold uppercase">Contact</h1>
-        <p className="text-sm text-gray-500 mt-1">Home / Contact</p>
-      </div>
+      <BannerComponent title="Contact Us" subtitle="Home / Contact Us" />
 
       {/* Map */}
       <div className="max-w-4xl mx-auto">

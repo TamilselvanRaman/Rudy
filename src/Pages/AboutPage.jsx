@@ -115,22 +115,7 @@ const AboutPage = () => {
   return (
     <div className="font-sans text-gray-700 ">
       {/* Banner */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 1 }}
-        className="bg-cover bg-center h-[250px] md:h-[320px] lg:h-[400px] flex flex-col justify-center items-center text-black"
-        style={{
-          backgroundImage: `url('/banner-image.jpg')`,
-          backgroundColor: "rgba(255,255,255,0.4)",
-          backgroundBlendMode: "lighten",
-        }}
-      >
-        <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold uppercase">
-          ABOUT
-        </h1>
-        <p className="text-base md:text-lg mt-2">Home / About</p>
-      </motion.div>
+      <BannerComponent title="About Us" subtitle="Home / About Us" />
 
       {/* Handcrafted Soap */}
       <section className="container mx-auto px-60 py-16 grid grid-cols-1 md:grid-cols-2 gap-10 items-center ">

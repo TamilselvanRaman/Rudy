@@ -85,17 +85,7 @@ const CartPage = () => {
       transition={{ duration: 0.4 }}
       className="min-h-screen"
     >
-      <div
-        className="bg-cover bg-center h-64 flex flex-col justify-center items-center text-black"
-        style={{
-          backgroundImage: `url('/banner-image.jpg')`,
-          backgroundColor: "rgba(255,255,255,0.4)",
-          backgroundBlendMode: "lighten",
-        }}
-      >
-        <h1 className="text-3xl  font-bold">Your Shopping Cart</h1>
-        <p className="text-sm mt-2 font-semibold">Home / Your Shopping Cart</p>
-      </div>
+      <BannerComponent title="Your Cart" subtitle="Home / Your Cart" />
 
       <div className="px-4 sm:px-40 py-10">
         <div className="hidden sm:grid grid-cols-3 font-semibold text-[#3c2f2f] text-2xl border-b pb-3 mb-4">

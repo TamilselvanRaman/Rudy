@@ -748,7 +748,7 @@ const ProfilePage = () => {
                         )}
                         {order.status === "Delivered" && (
                           <button
-                            onClick={() => dispatch(returnOrder(order.id))}
+                            // onClick={() => dispatch(returnOrder(order.id))}
                             className="text-blue-600 text-sm font-medium hover:underline"
                           >
                             Return Order
@@ -771,8 +771,9 @@ const ProfilePage = () => {
     return <div className="p-6 text-center text-lg">Loading...</div>;
 
   return (
-    <div className="flex flex-col md:flex-row bg-gray-50 min-h-screen ">
-      <div className="p-4 md:hidden bg-white shadow ">
+    <div className="relative min-h-screen bg-gray-50 flex flex-col md:flex-row">
+      {/* Mobile Header */}
+      <div className="p-4 bg-white shadow md:hidden w-full">
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
           className="text-2xl"
@@ -780,55 +781,83 @@ const ProfilePage = () => {
           {sidebarOpen ? <FiX /> : <FiMenu />}
         </button>
       </div>
+
+      {/* Sidebar */}
       <aside
-        className={`bg-white w-full md:w-1/4 p-6 shadow-sm ${
-          sidebarOpen ? "block" : "hidden md:block"
+        className={`fixed inset-y-0 left-0 z-50 w-4/5 bg-white shadow-lg transform transition-transform duration-300 md:static md:w-1/4 md:transform-none md:shadow-sm ${
+          sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         }`}
       >
-        <div className="flex flex-col items-center text-center">
-          <div className="relative w-24 h-24">
-            <img
-              src={localProfile.profileImage || "https://i.pravatar.cc/150"}
-              alt="Avatar"
-              className="w-full h-full rounded-full object-cover border-4 border-blue-200"
-            />
-            {isEditing && (
-              <label className="absolute bottom-0 right-0 bg-blue-600 text-white rounded-full p-1 cursor-pointer">
-                <FiEdit2 size={14} />
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handlePhotoChange}
-                />
-              </label>
-            )}
+        <div className="p-6">
+          {/* Sidebar Mobile Title */}
+          <div className="flex items-center justify-between md:hidden mb-4">
+            <h3 className="text-lg font-semibold text-gray-800">Menu</h3>
+            <button onClick={() => setSidebarOpen(false)} className="text-2xl">
+              <FiX />
+            </button>
           </div>
-          <p className="mt-3 text-sm text-gray-500">Welcome back</p>
-          <h3 className="text-lg font-semibold text-gray-800">
-            {localProfile.firstName}
-          </h3>
-        </div>
-        <div className="mt-6 space-y-3">
-          {menuItems.map((item, idx) => (
-            <div
-              key={idx}
-              onClick={() => {
-                item.action ? item.action() : setSelectedMenuItem(item.label);
-              }}
-              className={`flex items-center gap-3 px-4 py-2 rounded-md cursor-pointer transition-all ${
-                selectedMenuItem === item.label
-                  ? "bg-blue-100 text-blue-600 font-medium"
-                  : "hover:bg-gray-100 text-gray-700"
-              }`}
-            >
-              {item.icon}
-              <span>{item.label}</span>
+
+          {/* Profile */}
+          <div className="flex flex-col items-center text-center">
+            <div className="relative w-24 h-24">
+              <img
+                src={localProfile?.profileImage || "https://i.pravatar.cc/150"}
+                alt="Avatar"
+                className="w-full h-full rounded-full object-cover border-4 border-blue-200"
+              />
+              {isEditing && (
+                <label className="absolute bottom-0 right-0 bg-blue-600 text-white rounded-full p-1 cursor-pointer">
+                  <FiEdit2 size={14} />
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handlePhotoChange}
+                  />
+                </label>
+              )}
             </div>
-          ))}
+            <p className="mt-3 text-sm text-gray-500">Welcome back</p>
+            <h3 className="text-lg font-semibold text-gray-800">
+              {localProfile?.firstName || "Guest"}
+            </h3>
+          </div>
+
+          {/* Sidebar Menu */}
+          <div className="mt-6 space-y-3">
+            {menuItems.map((item, idx) => (
+              <div
+                key={idx}
+                onClick={() => {
+                  item.action ? item.action() : setSelectedMenuItem(item.label);
+                  setSidebarOpen(false); // Auto-close on mobile
+                }}
+                className={`flex items-center gap-3 px-4 py-2 rounded-md cursor-pointer transition-all ${
+                  selectedMenuItem === item.label
+                    ? "bg-blue-100 text-blue-600 font-medium"
+                    : "hover:bg-gray-100 text-gray-700"
+                }`}
+              >
+                {item.icon}
+                <span>{item.label}</span>
+              </div>
+            ))}
+          </div>
         </div>
       </aside>
-      <main className="flex-1 p-4 sm:p-6">{renderContent()}</main>
+
+      {/* Mobile Overlay */}
+      {sidebarOpen && (
+        <div
+          onClick={() => setSidebarOpen(false)}
+          className="fixed inset-y-0 right-0 w-1/5 z-40 bg-black/30 md:hidden"
+        />
+      )}
+
+      {/* Main Content */}
+      <main className="flex-1 p-4 sm:p-6 z-0">
+        {renderContent(selectedMenuItem)}
+      </main>
     </div>
   );
 };

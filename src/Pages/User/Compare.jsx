@@ -46,17 +46,10 @@ const Compare = () => {
   return (
     <div className="bg-white">
       {/* Banner */}
-      <div
-        className="bg-cover bg-center h-64 flex flex-col justify-center items-center text-black"
-        style={{
-          backgroundImage: `url('/banner-image.jpg')`,
-          backgroundColor: "rgba(255,255,255,0.4)",
-          backgroundBlendMode: "lighten",
-        }}
-      >
-        <h1 className="text-3xl font-bold uppercase">COMPARE</h1>
-        <p className="text-sm mt-2">Home / Compare</p>
-      </div>
+      <BannerComponent
+        title="Compare Products"
+        subtitle="Home / Compare Products"
+      />
 
       {/* Compare Items */}
       <div className="max-w-7xl mx-auto px-4 py-16">

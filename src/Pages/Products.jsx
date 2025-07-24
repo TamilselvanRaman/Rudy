@@ -11,6 +11,7 @@ import {
   selectAllProducts,
   selectProductLoading,
 } from "../redux/slices/productsSlice";
+import BannerComponent from "../Components/Shared/BannerComponent";
 
 const Products = () => {
   const dispatch = useDispatch();
@@ -177,17 +178,7 @@ const Products = () => {
 
   return (
     <div className="flex flex-col gap-6">
-      <div
-        className="bg-cover bg-center h-64 flex flex-col justify-center items-center text-black"
-        style={{
-          backgroundImage: `url('/banner-image.jpg')`,
-          backgroundColor: "rgba(255,255,255,0.4)",
-          backgroundBlendMode: "lighten",
-        }}
-      >
-        <h1 className="text-3xl font-bold">PRODUCTS</h1>
-        <p className="text-sm mt-2">Home / Products</p>
-      </div>
+      <BannerComponent title="Our Products" subtitle="Home / Products" />
 
       <div className="flex justify-between items-center px-4 md:hidden mt-4">
         <button

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ref, get, child, set } from "firebase/database";
+import { ref, get, child } from "firebase/database";
 import { database } from "../../firebase/firebaseConfig";
 import {
   FaMinus,
@@ -22,6 +22,8 @@ function ProductDetail() {
   const dispatch = useDispatch();
 
   const currentUser = useSelector((state) => state.auth.currentUser);
+  const cartItems = useSelector((state) => state.cart.cartItems);
+  const wishlistItems = useSelector((state) => state.wishlist.items);
 
   const [product, setProduct] = useState(null);
   const [selectedWeight, setSelectedWeight] = useState("");
@@ -29,9 +31,8 @@ function ProductDetail() {
   const [quantity, setQuantity] = useState(1);
   const [mainImage, setMainImage] = useState("");
   const [isQueryOpen, setIsQueryOpen] = useState(false);
-  const [addedToCart, setAddedToCart] = useState(false);
 
-  const rating = 4; // Placeholder
+  const rating = 4;
   const reviews = 120;
 
   useEffect(() => {
@@ -73,7 +74,7 @@ function ProductDetail() {
         },
       })
     );
-    setAddedToCart(true);
+    // setAddedToCart(true);
   };
 
   const onAddToWishlist = () => {
@@ -81,6 +82,7 @@ function ProductDetail() {
       alert("You must be logged in to add to wishlist.");
       return;
     }
+
     dispatch(
       addToWishlist({
         uid: currentUser.uid,
@@ -92,22 +94,27 @@ function ProductDetail() {
         },
       })
     );
+    // setAddedToWishlist(true);
   };
+
+  const isInCart = cartItems?.some(
+    (item) =>
+      item.id === product?.id &&
+      item.weight === selectedWeight &&
+      item.flavour === selectedFlavour
+  );
+
+  const isInWishlist = wishlistItems?.some((item) => item.id === product?.id);
+  console.log("isInWishlist", isInWishlist);
 
   return (
     <div>
       {/* Banner */}
-      <div
-        className="bg-cover bg-center h-64 flex flex-col justify-center items-center text-black"
-        style={{
-          backgroundImage: `url('/banner-image.jpg')`,
-          backgroundColor: "rgba(255,255,255,0.4)",
-          backgroundBlendMode: "lighten",
-        }}
-      >
-        <h1 className="text-3xl font-bold uppercase">Product</h1>
-        <p className="text-[13px] mt-2">Home / {product.name}</p>
-      </div>
+
+      <BannerComponent
+        title={product.name}
+        subtitle={`Home / ${product.name}`}
+      />
 
       <div className="max-w-4xl mx-auto p-6 flex flex-col md:flex-row gap-10">
         {/* Left column */}
@@ -199,7 +206,7 @@ function ProductDetail() {
             </div>
 
             <div className="font-semibold text-gray-800">Quantity:</div>
-            <div className="flex items-center border rounded-md bg-white shadow-sm overflow-hidden w-max">
+            <div className="flex items-center border border-gray-300/60 rounded-md bg-white shadow-sm overflow-hidden w-max">
               <button
                 onClick={() => setQuantity(Math.max(1, quantity - 1))}
                 className="bg-gray-100 px-3 py-2 text-gray-600 hover:bg-gray-200"
@@ -220,7 +227,7 @@ function ProductDetail() {
 
           {/* Action buttons */}
           <div className="flex flex-wrap gap-3 mt-6">
-            {addedToCart ? (
+            {isInCart ? (
               <button
                 onClick={() => navigate("/cartpage")}
                 className="bg-rose-300 hover:bg-rose-400 text-black px-6 py-2 rounded-lg shadow text-sm transition font-semibold"
@@ -235,16 +242,29 @@ function ProductDetail() {
                 Add To Cart
               </button>
             )}
-            <button
-              onClick={onAddToWishlist}
-              className="bg-[#dfe5ea] hover:bg-[#ccd4da] text-gray-700 px-6 py-2 rounded-lg shadow text-sm transition font-semibold"
-            >
-              Add to Wishlist
-            </button>
+
+            {isInWishlist ? (
+              <button
+                onClick={() => navigate("/wishlist")}
+                className="bg-pink-200 hover:bg-pink-300 text-black px-6 py-2 rounded-lg shadow text-sm transition font-semibold"
+              >
+                View Wishlist
+              </button>
+            ) : (
+              <button
+                onClick={onAddToWishlist}
+                className="bg-[#dfe5ea] hover:bg-[#ccd4da] text-gray-700 px-6 py-2 rounded-lg shadow text-sm transition font-semibold"
+              >
+                Add to Wishlist
+              </button>
+            )}
           </div>
 
           <div className="w-68 mt-4">
-            <button className="w-full mt-3 bg-[#c5dde0] hover:bg-[#a9cbd0] text-gray-900 text-sm px-10 py-2 rounded-lg shadow font-semibold transition">
+            <button
+              onClick={() => navigate("/cartpage")}
+              className="w-full mt-3 bg-[#c5dde0] hover:bg-[#a9cbd0] text-gray-900 text-sm px-10 py-2 rounded-lg shadow font-semibold transition"
+            >
               Buy it now
             </button>
           </div>

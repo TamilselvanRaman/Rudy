@@ -45,17 +45,10 @@ function Register() {
   return (
     <div>
       {/* Banner */}
-      <div
-        className="bg-cover bg-center h-64 flex flex-col justify-center items-center text-black"
-        style={{
-          backgroundImage: `url('/banner-image.jpg')`,
-          backgroundColor: "rgba(255,255,255,0.5)",
-          backgroundBlendMode: "lighten",
-        }}
-      >
-        <h1 className="text-3xl font-bold uppercase">Create Account</h1>
-        <p className="text-sm mt-2">Home / Create Account</p>
-      </div>
+      <BannerComponent
+        title="Create Account"
+        subtitle="Home / Create Account"
+      />
 
       {/* Form */}
       <div className="flex justify-center py-16 px-4 sm:px-6 lg:px-8">

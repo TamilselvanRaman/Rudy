@@ -111,11 +111,14 @@ const ProductCard = ({ product, onAddToCart, viewMode }) => {
         }
 
         try {
-          await set(ref(database, `wishlist/${currentUser.uid}/${product.id}`), {
-            name: product.name,
-            price: product.price,
-            image: product.images?.[0] || "",
-          });
+          await set(
+            ref(database, `wishlist/${currentUser.uid}/${product.id}`),
+            {
+              name: product.name,
+              price: product.price,
+              image: product.images?.[0] || "",
+            }
+          );
         } catch (err) {
           console.error("Error adding to wishlist:", err);
         }
@@ -202,7 +205,9 @@ const ProductCard = ({ product, onAddToCart, viewMode }) => {
                 key={i}
                 size={18}
                 className={
-                  i < randomStars ? "text-[#e4d8cf] fill-[#e4d8cf]" : "text-gray-300"
+                  i < randomStars
+                    ? "text-[#e4d8cf] fill-[#e4d8cf]"
+                    : "text-gray-300"
                 }
                 strokeWidth={1}
               />
@@ -288,14 +293,18 @@ const ProductCard = ({ product, onAddToCart, viewMode }) => {
       </AnimatePresence>
 
       <div className="text-center mt-4 px-2" onClick={handleNavigate}>
-        <h3 className="text-base font-semibold text-gray-800">{product.name}</h3>
+        <h3 className="text-base font-semibold text-gray-800">
+          {product.name}
+        </h3>
         <div className="flex justify-center items-center mt-1 gap-1">
           {Array.from({ length: 5 }).map((_, i) => (
             <Star
               key={i}
               size={18}
               className={
-                i < randomStars ? "text-[#e4d8cf] fill-[#e4d8cf]" : "text-gray-300"
+                i < randomStars
+                  ? "text-[#e4d8cf] fill-[#e4d8cf]"
+                  : "text-gray-300"
               }
               strokeWidth={1}
             />

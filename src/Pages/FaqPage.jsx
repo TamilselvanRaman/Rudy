@@ -62,17 +62,10 @@ const FaqPage = () => {
   return (
     <div className="w-full">
       {/* Banner Section */}
-      <div
-        className="bg-cover bg-center h-64 flex flex-col justify-center items-center text-black"
-        style={{
-          backgroundImage: `url('/banner-image.jpg')`,
-          backgroundColor: "rgba(255,255,255,0.4)",
-          backgroundBlendMode: "lighten",
-        }}
-      >
-        <h1 className="text-3xl font-bold">FAQ</h1>
-        <p className="text-sm mt-2">Home / Faq</p>
-      </div>
+    <BannerComponent
+        title="Frequently Asked Questions"
+        subtitle="Home / Frequently Asked Questions"
+      />
 
       <div className="text-center px-4 mt-10">
         <h2 className="text-lg md:text-xl lg:text-2xl font-bold text-black mb-2">
